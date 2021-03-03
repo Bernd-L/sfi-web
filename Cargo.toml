@@ -9,8 +9,37 @@ homepage = "https://github.com/Bernd-L/sfi-web#readme"
 readme = "README.md"
 documentation = "https://docs.rs/sfi-web"
 description = "Manage shared food inventories (web-app)"
-
+include = [
+    "/README.md",
+    "/LICENSE.md",
+    "/Cargo.toml",
+    "/Cargo.lock",
+    "/src",
+    "/index.html",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+
 [dependencies]
+# Core libs
+sfi-core = "0"
+libocc = "0.4"
+
+# Web framework & deps
+yew = "0.17"
+yew-router = "0.14.0"
+wasm-bindgen = "0.2"
+
+# Serde
+serde = "1"
+serde_derive = "1"
+
+# Other dependencies
+chrono = { version = "0.4", features = ["wasmbind"] }
+uuid = { version = "0.8", features = ["serde", "v4", "wasm-bindgen"] }
+anyhow = "1.0.38"
