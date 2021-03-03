@@ -1,0 +1,16 @@
+[package]
+name = "sfi-web"
+version = "0.0.0"
+authors = ["Bernd-L <git@bernd.pw>"]
+edition = "2018"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/Bernd-L/sfi-web"
+homepage = "https://github.com/Bernd-L/sfi-web#readme"
+readme = "README.md"
+documentation = "https://docs.rs/sfi-web"
+description = "Manage shared food inventories (web-app)"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
