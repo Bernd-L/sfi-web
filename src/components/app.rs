@@ -1,3 +1,4 @@
+use crate::components::home::Home;
 use yew::prelude::*;
 
 /// The root component of sfi-web
@@ -44,7 +45,7 @@ impl Component for App {
         html! {
             <>
 
-
+            <Home />
 
             </>
         }

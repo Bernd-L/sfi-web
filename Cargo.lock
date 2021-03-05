@@ -674,6 +674,7 @@ dependencies = [
  "libocc",
  "serde",
  "serde_derive",
+ "serde_json",
  "sfi-core",
  "uuid",
  "wasm-bindgen",
