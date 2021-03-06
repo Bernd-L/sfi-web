@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use sfi_core::types::{UserInfo, UserLogin, UserLogout, UserSignup};
+use sfi_core::types::{UserInfo, UserLogin, UserSignup};
 use uuid::Uuid;
 use yew::{
     format::{Json, Nothing},
@@ -191,10 +191,8 @@ impl LoginComponent {
     }
 
     fn logout(&mut self) {
-        let logout_info = UserLogout {};
-
         let request = Request::get("http://localhost:8080/api/v1/authentication/logout")
-            .body(Json(&logout_info))
+            .body(Nothing)
             .expect("Failed to build request (logout).");
 
         let options = FetchOptions {
@@ -218,6 +216,34 @@ impl LoginComponent {
             Ok(fetch_task) => State::LoggingOut(fetch_task),
             Err(error) => State::Error(error),
         };
+    }
+
+    fn probe_state(link: &ComponentLink<Self>) -> State {
+        let request = Request::get("http://localhost:8080/api/v1/authentication/status")
+            .body(Nothing)
+            .expect("Failed to build request (probe).");
+
+        let options = FetchOptions {
+            credentials: Some(RequestCredentials::SameOrigin),
+            ..FetchOptions::default()
+        };
+
+        let callback = link.callback(|response: Response<Json<Result<UserInfo>>>| {
+            let Json(data) = response.into_body();
+
+            match data {
+                Ok(user) => Msg::LoggedIn(user),
+                Err(_) => Msg::LoggedOut,
+            }
+        });
+
+        let task = FetchService::fetch_with_options(request, options, callback);
+
+        // Store the task so it isn't canceled immediately
+        match task {
+            Ok(fetch_task) => State::Probing(fetch_task),
+            Err(error) => State::Error(error),
+        }
     }
 
     fn view_form(&self) -> Html {
@@ -311,34 +337,6 @@ impl LoginComponent {
         match &self.state {
             State::LoggingOut(_) | State::LoggingIn(_) | State::Probing(_) => true,
             State::Initial | State::LoggedIn(_) | State::Error(_) => false,
-        }
-    }
-
-    fn probe_state(link: &ComponentLink<Self>) -> State {
-        let request = Request::get("http://localhost:8080/api/v1/authentication/status")
-            .body(Nothing)
-            .expect("Failed to build request (probe).");
-
-        let options = FetchOptions {
-            credentials: Some(RequestCredentials::SameOrigin),
-            ..FetchOptions::default()
-        };
-
-        let callback = link.callback(|response: Response<Json<Result<UserInfo>>>| {
-            let Json(data) = response.into_body();
-
-            match data {
-                Ok(user) => Msg::LoggedIn(user),
-                Err(_) => Msg::LoggedOut,
-            }
-        });
-
-        let task = FetchService::fetch_with_options(request, options, callback);
-
-        // Store the task so it isn't canceled immediately
-        match task {
-            Ok(fetch_task) => State::Probing(fetch_task),
-            Err(error) => State::Error(error),
         }
     }
 }
