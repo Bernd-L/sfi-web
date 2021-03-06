@@ -1,4 +1,4 @@
-use super::login_demo::Login;
+use super::login_demo::LoginComponent;
 use crate::constants;
 use yew::prelude::*;
 
@@ -36,7 +36,7 @@ impl Component for Home {
                 <a href="https://github.com/Bernd-L/sfi-web">{ "here" }</a>
             </p>
 
-            <Login />
+            <LoginComponent />
 
             <div style=BOXED>
                 <h3>{constants::license::license_notice_title()}</h3>

@@ -455,14 +455,11 @@ checksum = "265d751d31d6780a3f956bb5b8022feba2d94eeee5a84ba64f4212eedca42213"
 [[package]]
 name = "libocc"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cceee78b40cd6d7e7d9d309cb38816d65ad7f4277b4af21e214809ca5fafb15a"
 dependencies = [
  "anyhow",
  "chrono",
  "multihash",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -662,8 +659,13 @@ dependencies = [
 [[package]]
 name = "sfi-core"
 version = "0.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45d97a7d9edc0ed64ce028f9f3f2accf73c5a1cfe775a544e2ba0380559761d2"
+dependencies = [
+ "anyhow",
+ "libocc",
+ "serde",
+ "serde_derive",
+ "uuid",
+]
 
 [[package]]
 name = "sfi-web"
