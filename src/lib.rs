@@ -2,6 +2,7 @@
 
 pub(crate) mod components;
 pub(crate) mod constants;
+pub(crate) mod types;
 
 use components::app;
 use wasm_bindgen::prelude::*;

@@ -1,26 +1,34 @@
-use std::{thread, time::Duration};
-
-use crate::constants;
 use anyhow::Result;
 use serde_json::json;
 use yew::{
     format::Json,
     prelude::*,
     services::{
-        fetch::{Request, Response},
+        fetch::{FetchTask, Request, Response},
         FetchService,
     },
     web_sys::console,
 };
 
+use crate::types::User;
+
 /// The root component of sfi-web
 pub struct Login {
     link: ComponentLink<Self>,
+    state: State,
 }
 
 pub enum Msg {
-    Do,
-    Done(Response<Result<String>>),
+    MakeRequest,
+    LoggedIn(User),
+    LoginError(anyhow::Error),
+}
+
+pub enum State {
+    Initial,
+    LoggingIn(FetchTask),
+    LoggedIn(User),
+    Error(anyhow::Error),
 }
 
 impl Component for Login {
@@ -28,12 +36,23 @@ impl Component for Login {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link }
+        Self {
+            link,
+            state: State::Initial,
+        }
     }
+
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Do => self.debug_login(),
-            Msg::Done(response) => console::log_1(&format!("{:?}", response).into()),
+            Msg::MakeRequest => self.debug_login(),
+            Msg::LoggedIn(user) => {
+                console::log_1(&format!("{:?}", &user).into());
+                self.state = State::LoggedIn(user);
+            }
+            Msg::LoginError(error) => {
+                console::log_1(&format!("{:?}", &error).into());
+                self.state = State::Error(error);
+            }
         }
 
         true
@@ -47,11 +66,8 @@ impl Component for Login {
         html! {
             <>
 
-            <button
-                onclick=self.link.callback(|_| Msg::Do)
-            >
-                {"debug login"}
-            </button>
+            { self.view_button() }
+            { self.view_state() }
 
             </>
         }
@@ -59,7 +75,7 @@ impl Component for Login {
 }
 
 impl Login {
-    fn debug_login(&self) {
+    fn debug_login(&mut self) {
         let json_payload = json!({
             "uuid": "5a099ef4-9cf1-4e78-93d6-f9cc48a52126",
             "password": "123",
@@ -73,19 +89,49 @@ impl Login {
 
         let task = FetchService::fetch(
             request,
-            self.link.callback(|response: Response<Result<String>>| {
-                if response.status().is_success() {
-                    Msg::Done(response)
-                } else {
-                    Msg::Done(response)
-                }
-            }),
+            self.link
+                .callback(|response: Response<Json<Result<User>>>| {
+                    let Json(data) = response.into_body();
+
+                    match data {
+                        Ok(user) => Msg::LoggedIn(user),
+                        Err(error) => Msg::LoginError(error),
+                    }
+                }),
         );
 
-        // Try to prevent the task from being cancelled
-        // by suppressing it's drop implementation
-        Box::leak(Box::new(task));
+        // Store the task so it isn't canceled immediately
+        self.state = match task {
+            Ok(fetch_task) => State::LoggingIn(fetch_task),
+            Err(error) => State::Error(error),
+        };
+    }
 
-        // TODO find a way of sending fetch requests without leaking memory on purpose
+    fn view_button(&self) -> Html {
+        html! {
+            <button
+                onclick=self.link.callback(|_| Msg::MakeRequest)
+                disabled=self.is_logging_in()
+            >
+                {"debug login"}
+            </button>
+        }
+    }
+
+    fn view_state(&self) -> Html {
+        match &self.state {
+            State::Initial => html! {<p>{ "Press login to log in" }</p>},
+            State::LoggingIn(_) => html! {<p>{ "Logging in..." }</p>},
+            State::LoggedIn(user) => html! {<p>{ "Logged in as " }{ user.uuid }</p>},
+            State::Error(error) => html! {<p>{ "Couldn't log in: " }{ error }</p>},
+        }
+    }
+
+    fn is_logging_in(&self) -> bool {
+        if let State::LoggingIn(_) = &self.state {
+            true
+        } else {
+            false
+        }
     }
 }
