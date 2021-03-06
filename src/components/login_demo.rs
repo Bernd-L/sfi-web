@@ -4,10 +4,10 @@ use yew::{
     format::Json,
     prelude::*,
     services::{
-        fetch::{FetchTask, Request, Response},
+        fetch::{FetchOptions, FetchTask, Request, Response},
         FetchService,
     },
-    web_sys::console,
+    web_sys::{console, RequestCredentials},
 };
 
 use crate::types::User;
@@ -87,18 +87,23 @@ impl Login {
             .body(Json(&json_payload))
             .expect("Failed to build request.");
 
-        let task = FetchService::fetch(
-            request,
-            self.link
-                .callback(|response: Response<Json<Result<User>>>| {
-                    let Json(data) = response.into_body();
+        let options = FetchOptions {
+            credentials: Some(RequestCredentials::SameOrigin),
+            ..FetchOptions::default()
+        };
 
-                    match data {
-                        Ok(user) => Msg::LoggedIn(user),
-                        Err(error) => Msg::LoginError(error),
-                    }
-                }),
-        );
+        let callback = self
+            .link
+            .callback(|response: Response<Json<Result<User>>>| {
+                let Json(data) = response.into_body();
+
+                match data {
+                    Ok(user) => Msg::LoggedIn(user),
+                    Err(error) => Msg::LoginError(error),
+                }
+            });
+
+        let task = FetchService::fetch_with_options(request, options, callback);
 
         // Store the task so it isn't canceled immediately
         self.state = match task {
