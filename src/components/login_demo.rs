@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use crate::constants;
 use anyhow::Result;
 use serde_json::json;
@@ -64,7 +66,7 @@ impl Login {
             "totp": null
         });
 
-        let request = Request::post("http://localhost:8080/api/authentication/login")
+        let request = Request::post("http://localhost:8080/api/v1/authentication/login")
             .header("Content-Type", "application/json")
             .body(Json(&json_payload))
             .expect("Failed to build request.");
@@ -79,5 +81,11 @@ impl Login {
                 }
             }),
         );
+
+        // Try to prevent the task from being cancelled
+        // by suppressing it's drop implementation
+        Box::leak(Box::new(task));
+
+        // TODO find a way of sending fetch requests without leaking memory on purpose
     }
 }
