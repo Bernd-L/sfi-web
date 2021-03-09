@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use sfi_core::types::{UserInfo, UserLogin, UserSignup};
+use sfi_core::types::{UserIdentifier, UserInfo, UserLogin, UserSignup};
 use uuid::Uuid;
 use yew::{
     format::{Json, Nothing},
@@ -119,7 +119,7 @@ impl Component for LoginComponent {
 impl LoginComponent {
     fn login(&mut self) {
         let login_info = UserLogin {
-            uuid: Uuid::from_str(&self.form.uuid).unwrap(),
+            identifier: UserIdentifier::Name(self.form.name.clone()),
             password: self.form.password.clone(),
             totp: None,
         };
@@ -280,16 +280,16 @@ impl LoginComponent {
                     oninput=self.link.callback(|i: InputData| Msg::ChangePassword(i.value))
                 />
 
-                // Space
-                // TODO use CSS instead
-                { " " }
+                // // Space
+                // // TODO use CSS instead
+                // { " " }
 
-                // The input fields for new cards
-                <input
-                    type="text"
-                    placeholder="UUID"
-                    oninput=self.link.callback(|i: InputData| Msg::ChangeUuid(i.value))
-                />
+                // // The input fields for new cards
+                // <input
+                //     type="text"
+                //     placeholder="UUID"
+                //     oninput=self.link.callback(|i: InputData| Msg::ChangeUuid(i.value))
+                // />
 
                 // TODO use CSS instead
                 <br />
