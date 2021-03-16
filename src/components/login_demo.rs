@@ -1,8 +1,5 @@
-use std::str::FromStr;
-
 use anyhow::Result;
-use sfi_core::types::{UserIdentifier, UserInfo, UserLogin, UserSignup};
-use uuid::Uuid;
+use sfi_core::types::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
 use yew::{
     format::{Json, Nothing},
     prelude::*,
@@ -22,7 +19,6 @@ pub struct LoginComponent {
 
 struct LoginForm {
     password: String,
-    uuid: String,
     name: String,
 }
 
@@ -30,7 +26,6 @@ impl LoginForm {
     fn new() -> Self {
         Self {
             password: String::new(),
-            uuid: String::new(),
             name: String::new(),
         }
     }
@@ -44,7 +39,6 @@ pub enum Msg {
     LoggedOut,
     LoginError(anyhow::Error),
 
-    ChangeUuid(String),
     ChangePassword(String),
     ChangeName(String),
 }
@@ -92,7 +86,6 @@ impl Component for LoginComponent {
                 console::log_1(&format!("{:?}", &error).into());
                 self.state = State::Error(error);
             }
-            Msg::ChangeUuid(uuid) => self.form.uuid = uuid,
             Msg::ChangePassword(password) => self.form.password = password,
             Msg::ChangeName(name) => self.form.name = name,
         }
