@@ -27,7 +27,3 @@ impl Component for Items {
         }
     }
 }
-
-const BOXED: &str = "
-    max-width: 700px;
-";

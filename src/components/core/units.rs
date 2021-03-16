@@ -27,7 +27,3 @@ impl Component for Units {
         }
     }
 }
-
-const BOXED: &str = "
-    max-width: 700px;
-";

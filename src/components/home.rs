@@ -1,5 +1,5 @@
 use super::login_demo::LoginComponent;
-use crate::constants;
+use crate::constants::{self, css::BOXED};
 use yew::prelude::*;
 
 /// The root component of sfi-web
@@ -53,7 +53,3 @@ impl Component for Home {
         }
     }
 }
-
-const BOXED: &str = "
-    max-width: 700px;
-";
