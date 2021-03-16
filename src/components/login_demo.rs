@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sfi_core::types::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
+use sfi_core::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
 use yew::{
     format::{Json, Nothing},
     prelude::*,
