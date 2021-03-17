@@ -1,14 +1,22 @@
 use crate::constants;
+use sfi_core::{store::Store, Inventory};
 use yew::prelude::*;
 
-pub struct Inventories;
+pub struct Inventories {
+    props: Props,
+}
+
+#[derive(Properties, Clone)]
+pub struct Props {
+    store: Store<'static>,
+}
 
 impl Component for Inventories {
     type Message = ();
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        Self {}
+    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+        Self { props }
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {
@@ -22,8 +30,21 @@ impl Component for Inventories {
     fn view(&self) -> Html {
         html! {
             <>
+                // { for self.props.store.}
 
+                // {self.view_inventory()}
             </>
+        }
+    }
+}
+
+impl Inventories {
+    fn view_inventory(inventory: &Inventory) -> Html {
+        html! {
+            <div>
+                // Or maybe use an h1, or h2?
+                <span>{ inventory.name() }</span>
+            </div>
         }
     }
 }
