@@ -1,4 +1,4 @@
-use crate::constants;
+use crate::components::app::{AppRoute, AppRouterButton};
 use sfi_core::{store::Store, Inventory};
 use yew::prelude::*;
 
@@ -8,7 +8,7 @@ pub struct Inventories {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    store: Store<'static>,
+    pub store: Store<'static>,
 }
 
 impl Component for Inventories {
@@ -30,21 +30,35 @@ impl Component for Inventories {
     fn view(&self) -> Html {
         html! {
             <>
-                // { for self.props.store.}
 
-                // {self.view_inventory()}
+            <h1>{ "Inventories" }</h1>
+
+            <AppRouterButton route=AppRoute::Home>{ "Go to home" }</AppRouterButton>
+
+            { self.view_inventories() }
+
             </>
         }
     }
 }
 
 impl Inventories {
+    fn view_inventories(&self) -> Html {
+        self.props
+            .store
+            .iter()
+            .map(|inventory| Self::view_inventory(inventory))
+            .collect()
+    }
+
     fn view_inventory(inventory: &Inventory) -> Html {
         html! {
+
             <div>
                 // Or maybe use an h1, or h2?
                 <span>{ inventory.name() }</span>
             </div>
+
         }
     }
 }

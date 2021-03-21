@@ -1,20 +1,40 @@
-use super::login_demo::LoginComponent;
+use super::{
+    app::{AppRoute, AppRouterButton},
+    login_demo::LoginComponent,
+};
 use crate::constants::{self, css::BOXED};
 use yew::prelude::*;
+use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
 
 /// The root component of sfi-web
-pub struct Home;
+pub struct Home {
+    link: ComponentLink<Self>,
+    route_dispatcher: RouteAgentDispatcher,
+}
+
+pub enum Msg {
+    ShowInventories,
+}
 
 impl Component for Home {
-    type Message = ();
+    type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        Self {}
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Self {
+            link,
+            route_dispatcher: RouteAgentDispatcher::new(),
+        }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        true
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::ShowInventories => {
+                self.route_dispatcher
+                    .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
+                false
+            }
+        }
     }
 
     fn change(&mut self, _: Self::Properties) -> ShouldRender {
@@ -36,7 +56,11 @@ impl Component for Home {
                 <a href="https://github.com/Bernd-L/sfi-web">{ "here" }</a>
             </p>
 
-            <LoginComponent />
+            <p>
+                { "To navigate to the inventories page, press the button below:"}
+            </p>
+
+            <AppRouterButton route=AppRoute::Inventories>{ "Inventories" }</AppRouterButton>
 
             <div style=BOXED>
                 <h3>{constants::license::license_notice_title()}</h3>
