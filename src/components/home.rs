@@ -48,9 +48,6 @@ impl Component for Home {
             <h1>{constants::meta::NAME}</h1>
             {constants::meta::ABOUT}
 
-            // The main application
-            // TODO implement
-
             <p>
                 { "Get the source code "}
                 <a href="https://github.com/Bernd-L/sfi-web">{ "here" }</a>

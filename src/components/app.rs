@@ -84,7 +84,7 @@ impl App {
                 html! { <Home /> }
             }
             AppRoute::Inventories => {
-                html! { <Inventories store=store/> }
+                html! { <Inventories /> }
             }
 
             // TODO implement 404

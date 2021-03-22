@@ -2,6 +2,7 @@
 
 pub(crate) mod components;
 pub(crate) mod constants;
+pub(crate) mod services;
 pub(crate) mod types;
 
 use components::app;
