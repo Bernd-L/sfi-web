@@ -16,6 +16,10 @@ pub fn main() -> Result<(), JsValue> {
     console::log_1(&constants::license::license_notice_body().into());
     console::group_end();
 
+    // Initiate the logger when not in release mode
+    #[cfg(debug_assertions)]
+    wasm_logger::init(wasm_logger::Config::default());
+
     // Start the yew app
     yew::start_app::<app::App>();
 
