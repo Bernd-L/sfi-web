@@ -1,4 +1,6 @@
-use crate::components::{core::inventories::Inventories, home::Home, login::LoginComponent};
+use crate::components::{
+    core::inventories::Inventories, debug_tools::DebugTools, home::Home, login::LoginComponent,
+};
 use uuid::Uuid;
 use yew::prelude::*;
 use yew_router::{components::RouterAnchor, prelude::*, switch::Permissive};
@@ -55,6 +57,10 @@ impl Component for App {
             <>
             // TODO implement some kind of nav bar
 
+
+            // Include debug tools in debug builds
+            { self.view_debug_tools() }
+
             // The login component
             <LoginComponent />
 
@@ -106,5 +112,14 @@ impl App {
                 html! {<span>{ "TODO implement this" }</span>}
             }
         }
+    }
+
+    fn view_debug_tools(&self) -> Html {
+        // Include debug tools in debug builds
+        #[cfg(debug_assertions)]
+        return html! { <DebugTools /> };
+
+        // Don't include debug tools in release builds
+        html! {}
     }
 }

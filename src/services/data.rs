@@ -14,6 +14,7 @@ const EVENT_STORE_KEY: &'static str = "sfi.events.store";
 pub enum Request {
     GetInventories,
     MakeDebugInventory,
+    DeleteAllData,
 }
 
 #[derive(Debug)]
@@ -25,7 +26,7 @@ pub enum Response {
 pub struct DataAgent {
     link: AgentLink<DataAgent>,
     subscribers: HashSet<HandlerId>,
-    storage_service: StorageService,
+    local_storage: StorageService,
 
     store: Store<'static>,
 }
@@ -38,12 +39,11 @@ impl Agent for DataAgent {
 
     fn create(link: AgentLink<Self>) -> Self {
         // Get a reference to localStorage
-        let mut storage_service =
-            StorageService::new(Area::Local).expect("Cannot use localStorage");
+        let local_storage = StorageService::new(Area::Local).expect("Cannot use localStorage");
 
         // Load the event store from localStorage
         let store = {
-            if let Json(Ok(store)) = storage_service.restore(EVENT_STORE_KEY) {
+            if let Json(Ok(store)) = local_storage.restore(EVENT_STORE_KEY) {
                 // Load the event store from localStorage
                 store
             } else {
@@ -56,7 +56,7 @@ impl Agent for DataAgent {
             link,
             subscribers: HashSet::new(),
             store,
-            storage_service,
+            local_storage,
         }
     }
 
@@ -83,6 +83,16 @@ impl Agent for DataAgent {
                     self.link.respond(*sub, Response::NewInventoryUuid(res))
                 }
             }
+            Request::DeleteAllData => {
+                self.store = Store::new();
+                self.persist_data();
+
+                let res = (&self.store).to_vec();
+
+                for sub in self.subscribers.iter() {
+                    self.link.respond(*sub, Response::Inventories(res.clone()))
+                }
+            }
         }
     }
 
@@ -102,7 +112,6 @@ impl Agent for DataAgent {
 
 impl DataAgent {
     fn persist_data(&mut self) -> () {
-        self.storage_service
-            .store(EVENT_STORE_KEY, Json(&self.store));
+        self.local_storage.store(EVENT_STORE_KEY, Json(&self.store));
     }
 }
