@@ -13,7 +13,7 @@ use yew::{
 /// The root component of sfi-web
 pub struct LoginComponent {
     link: ComponentLink<Self>,
-    state: State,
+    state: AuthState,
     form: LoginForm,
 }
 
@@ -43,7 +43,8 @@ pub enum Msg {
     ChangeName(String),
 }
 
-pub enum State {
+#[derive(Debug)]
+pub enum AuthState {
     Probing(FetchTask),
 
     // Logged out
@@ -77,14 +78,14 @@ impl Component for LoginComponent {
             Msg::StartLogout => self.logout(),
             Msg::LoggedIn(user) => {
                 console::log_1(&format!("{:?}", &user).into());
-                self.state = State::LoggedIn(user);
+                self.state = AuthState::LoggedIn(user);
             }
             Msg::LoggedOut => {
-                self.state = State::Initial;
+                self.state = AuthState::Initial;
             }
             Msg::LoginError(error) => {
                 console::log_1(&format!("{:?}", &error).into());
-                self.state = State::Error(error);
+                self.state = AuthState::Error(error);
             }
             Msg::ChangePassword(password) => self.form.password = password,
             Msg::ChangeName(name) => self.form.name = name,
@@ -142,8 +143,8 @@ impl LoginComponent {
 
         // Store the task so it isn't canceled immediately
         self.state = match task {
-            Ok(fetch_task) => State::LoggingIn(fetch_task),
-            Err(error) => State::Error(error),
+            Ok(fetch_task) => AuthState::LoggingIn(fetch_task),
+            Err(error) => AuthState::Error(error),
         };
     }
 
@@ -178,8 +179,8 @@ impl LoginComponent {
 
         // Store the task so it isn't canceled immediately
         self.state = match task {
-            Ok(fetch_task) => State::LoggingIn(fetch_task),
-            Err(error) => State::Error(error),
+            Ok(fetch_task) => AuthState::LoggingIn(fetch_task),
+            Err(error) => AuthState::Error(error),
         };
     }
 
@@ -206,12 +207,12 @@ impl LoginComponent {
 
         // Store the task so it isn't canceled immediately
         self.state = match task {
-            Ok(fetch_task) => State::LoggingOut(fetch_task),
-            Err(error) => State::Error(error),
+            Ok(fetch_task) => AuthState::LoggingOut(fetch_task),
+            Err(error) => AuthState::Error(error),
         };
     }
 
-    fn probe_state(link: &ComponentLink<Self>) -> State {
+    fn probe_state(link: &ComponentLink<Self>) -> AuthState {
         let request = Request::get("http://localhost:8080/api/v1/authentication/status")
             .body(Nothing)
             .expect("Failed to build request (probe).");
@@ -234,102 +235,109 @@ impl LoginComponent {
 
         // Store the task so it isn't canceled immediately
         match task {
-            Ok(fetch_task) => State::Probing(fetch_task),
-            Err(error) => State::Error(error),
+            Ok(fetch_task) => AuthState::Probing(fetch_task),
+            Err(error) => AuthState::Error(error),
         }
     }
 
     fn view_form(&self) -> Html {
-        if let State::LoggedIn(_) = self.state {
-            html! {
+        let busy = self.is_busy();
 
-                <button
-                    onclick=self.link.callback(|_| Msg::StartLogout)
-                    disabled=self.is_busy()
-                >
-                    {"Log out"}
-                </button>
+        match self.state {
+            AuthState::LoggedIn(_) | AuthState::LoggingOut(_) => {
+                html! {
 
+                    <button
+                        onclick=self.link.callback(|_| Msg::StartLogout)
+                        disabled=busy
+                    >
+                        {"Log out"}
+                    </button>
+
+                }
             }
-        } else {
-            html! {
-                <>
+            _ => {
+                html! {
+                    <>
 
-                // The name of the new user
-                <input
-                    type="text"
-                    placeholder="user name"
-                    oninput=self.link.callback(|i: InputData| Msg::ChangeName(i.value))
-                />
+                    // The name of the new user
+                    <input
+                        type="text"
+                        placeholder="user name"
+                        disabled=busy
+                        oninput=self.link.callback(|i: InputData| Msg::ChangeName(i.value))
+                    />
 
-                // Space
-                // TODO use CSS instead
-                { " " }
+                    // Space
+                    // TODO use CSS instead
+                    { " " }
 
-                // The input fields for new cards
-                <input
-                    type="password"
-                    placeholder="password"
-                    oninput=self.link.callback(|i: InputData| Msg::ChangePassword(i.value))
-                />
+                    // The input fields for new cards
+                    <input
+                        type="password"
+                        placeholder="password"
+                        disabled=busy
+                        oninput=self.link.callback(|i: InputData| Msg::ChangePassword(i.value))
+                    />
 
-                // // Space
-                // // TODO use CSS instead
-                // { " " }
+                    // // Space
+                    // // TODO use CSS instead
+                    // { " " }
 
-                // // The input fields for new cards
-                // <input
-                //     type="text"
-                //     placeholder="UUID"
-                //     oninput=self.link.callback(|i: InputData| Msg::ChangeUuid(i.value))
-                // />
+                    // // The input fields for new cards
+                    // <input
+                    //     type="text"
+                    //     placeholder="UUID"
+                    //     oninput=self.link.callback(|i: InputData| Msg::ChangeUuid(i.value))
+                    // />
 
-                // TODO use CSS instead
-                <br />
-                <br />
+                    // TODO use CSS instead
+                    <br />
+                    <br />
 
-                <button
-                    onclick=self.link.callback(|_| Msg::StartLogin)
-                    disabled=self.is_busy()
-                >
-                    {"Login"}
-                </button>
+                    <button
+                        onclick=self.link.callback(|_| Msg::StartLogin)
+                        disabled=busy
+                    >
+                        {"Login"}
+                    </button>
 
-                // Space
-                // TODO use CSS instead
-                { " " }
+                    // Space
+                    // TODO use CSS instead
+                    { " " }
 
-                <button
-                    onclick=self.link.callback(|_| Msg::StartSignup)
-                    disabled=self.is_busy()
-                >
-                    {"Sign up"}
-                </button>
+                    <button
+                        onclick=self.link.callback(|_| Msg::StartSignup)
+                        disabled=busy
+                    >
+                        {"Sign up"}
+                    </button>
 
-                </>
+                    </>
+                }
             }
         }
     }
 
     fn view_state(&self) -> Html {
         match &self.state {
-            State::Probing(_) => html! {<p>{ "Fetching state..." }</p>},
-            State::Initial => {
+            AuthState::Probing(_) => html! {<p>{ "Fetching state..." }</p>},
+            AuthState::Initial => {
                 html! {<p>{ "Press login to log in (name only used for sign up)" }</p>}
             }
-            State::LoggingIn(_) => html! {<p>{ "Logging in..." }</p>},
-            State::LoggedIn(user) => {
+            AuthState::LoggingIn(_) => html! {<p>{ "Logging in..." }</p>},
+            AuthState::LoggedIn(user) => {
                 html! {<p>{ format!("Logged in as {} ({})", user.uuid, user.name) }</p>}
             }
-            State::Error(error) => html! {<p>{ "Couldn't log in: " }{ error }</p>},
-            State::LoggingOut(_) => html! {<p>{ "Logging out..." }</p>},
+            AuthState::Error(error) => html! {<p>{ "Couldn't log in: " }{ error }</p>},
+            AuthState::LoggingOut(_) => html! {<p>{ "Logging out..." }</p>},
         }
     }
 
     fn is_busy(&self) -> bool {
         match &self.state {
-            State::LoggingOut(_) | State::LoggingIn(_) | State::Probing(_) => true,
-            State::Initial | State::LoggedIn(_) | State::Error(_) => false,
+            AuthState::LoggingOut(_) | AuthState::LoggingIn(_) | AuthState::Probing(_) => true,
+            AuthState::Initial | AuthState::LoggedIn(_) | AuthState::Error(_) => false,
         }
     }
 }
