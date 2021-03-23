@@ -1,15 +1,20 @@
 use yew::prelude::*;
 
-use crate::services::data::{DataAgent, Request, Response};
+use crate::services::{
+    auth::AuthAgent,
+    data::{DataAgent, DataAgentRequest, DataAgentResponse},
+};
 
 pub struct DebugTools {
     link: ComponentLink<Self>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
+    // auth_bridge: Box<dyn Bridge<AuthAgent>>,
 }
 
 pub enum Msg {
     DeleteAllData,
-    AgentResponse(Response),
+    DataAgentResponse(DataAgentResponse),
+    AuthAgentResponse(DataAgentResponse),
 }
 
 impl Component for DebugTools {
@@ -17,14 +22,18 @@ impl Component for DebugTools {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let data_bridge = DataAgent::bridge(link.callback(Msg::AgentResponse));
-        Self { link, data_bridge }
+        Self {
+            data_bridge: DataAgent::bridge(link.callback(Msg::DataAgentResponse)),
+            // auth_bridge: AuthAgent::bridge(link.callback(Msg::AuthAgentResponse)),
+            link,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::DeleteAllData => self.data_bridge.send(Request::DeleteAllData),
-            Msg::AgentResponse(_) => {}
+            Msg::DeleteAllData => self.data_bridge.send(DataAgentRequest::DeleteAllData),
+            Msg::DataAgentResponse(_) => {}
+            Msg::AuthAgentResponse(_) => {}
         }
 
         false

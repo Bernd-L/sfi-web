@@ -1,6 +1,6 @@
 use crate::{
     components::app::{AppRoute, AppRouterButton},
-    services::data::{DataAgent, Request, Response},
+    services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
 use sfi_core::{store::InventoryHandle, Inventory};
 use yew::{prelude::*, Bridge};
@@ -8,7 +8,7 @@ use yew::{prelude::*, Bridge};
 pub enum Msg {
     // NewState(&'static Vec<InventoryHandle<'static>>),
     // NewState(Vec<InventoryHandle<'static>>),
-    AgentResponse(Response),
+    AgentResponse(DataAgentResponse),
     RequestNewState,
     MakeDebugInventory,
 }
@@ -28,7 +28,7 @@ impl Component for Inventories {
         let mut data_bridge = DataAgent::bridge(link.callback(Msg::AgentResponse));
 
         // Request a list of the currently accessible inventory handles
-        data_bridge.send(Request::GetInventories);
+        data_bridge.send(DataAgentRequest::GetInventories);
 
         // Create the component
         Self {
@@ -41,19 +41,19 @@ impl Component for Inventories {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::RequestNewState => {
-                self.data_bridge.send(Request::GetInventories);
+                self.data_bridge.send(DataAgentRequest::GetInventories);
                 false
             }
             Msg::MakeDebugInventory => {
-                self.data_bridge.send(Request::MakeDebugInventory);
+                self.data_bridge.send(DataAgentRequest::MakeDebugInventory);
                 false
             }
             Msg::AgentResponse(response) => match response {
-                Response::Inventories(state) => {
+                DataAgentResponse::Inventories(state) => {
                     self.handles = Some(state);
                     true
                 }
-                Response::NewInventoryUuid(uuid) => {
+                DataAgentResponse::NewInventoryUuid(uuid) => {
                     // Request new state
                     self.link.send_message(Msg::RequestNewState);
                     false

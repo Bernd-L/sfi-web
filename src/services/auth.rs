@@ -15,7 +15,7 @@ use yew::{
 use crate::components::login::AuthState;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub enum Request {
+pub enum AuthAgentRequest {
     GetAuthStatus,
     Login(UserLogin),
     Signup(UserSignup),
@@ -36,7 +36,7 @@ pub struct AuthAgent {
 impl Agent for AuthAgent {
     type Reach = Context<Self>;
     type Message = Msg;
-    type Input = Request;
+    type Input = AuthAgentRequest;
     type Output = Rc<AuthState>;
 
     fn create(link: AgentLink<Self>) -> Self {
@@ -62,28 +62,28 @@ impl Agent for AuthAgent {
     fn handle_input(&mut self, msg: Self::Input, _id: HandlerId) {
         // Handle authentication  requests from components and other agents
         match msg {
-            Request::GetAuthStatus => {
+            AuthAgentRequest::GetAuthStatus => {
                 let output = Rc::new(self.probe_state());
 
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, output.clone());
                 }
             }
-            Request::Login(login_info) => {
+            AuthAgentRequest::Login(login_info) => {
                 let output = Rc::new(self.login(login_info));
 
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, output.clone());
                 }
             }
-            Request::Signup(signup_info) => {
+            AuthAgentRequest::Signup(signup_info) => {
                 let output = Rc::new(self.signup(signup_info));
 
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, output.clone());
                 }
             }
-            Request::Logout => {
+            AuthAgentRequest::Logout => {
                 let output = Rc::new(self.logout());
 
                 for sub in self.subscribers.iter() {

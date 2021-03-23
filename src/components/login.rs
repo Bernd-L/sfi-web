@@ -1,4 +1,4 @@
-use crate::services::auth::{AuthAgent, Request};
+use crate::services::auth::{AuthAgent, AuthAgentRequest};
 use sfi_core::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
 use std::rc::Rc;
 use yew::{prelude::*, services::fetch::FetchTask};
@@ -60,8 +60,8 @@ impl Component for LoginComponent {
         // Initiate a bridge to the data agent
         let mut auth_bridge = AuthAgent::bridge(link.callback(Msg::NewAuthState));
 
-        // Request a list of the currently accessible inventory handles
-        auth_bridge.send(Request::GetAuthStatus);
+        // Request the current authentication status
+        auth_bridge.send(AuthAgentRequest::GetAuthStatus);
 
         Self {
             state: Rc::new(AuthState::Initial),
@@ -74,16 +74,16 @@ impl Component for LoginComponent {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             // Handle auth requests by the user
-            Msg::StartLogin => self.auth_bridge.send(Request::Login(UserLogin {
+            Msg::StartLogin => self.auth_bridge.send(AuthAgentRequest::Login(UserLogin {
                 identifier: UserIdentifier::Name(self.form.name.clone()),
                 password: self.form.password.clone(),
                 totp: None,
             })),
-            Msg::StartSignup => self.auth_bridge.send(Request::Signup(UserSignup {
+            Msg::StartSignup => self.auth_bridge.send(AuthAgentRequest::Signup(UserSignup {
                 password: self.form.password.clone(),
                 name: self.form.name.clone(),
             })),
-            Msg::StartLogout => self.auth_bridge.send(Request::Logout),
+            Msg::StartLogout => self.auth_bridge.send(AuthAgentRequest::Logout),
 
             // Handle form inputs
             Msg::ChangePassword(password) => self.form.password = password,
