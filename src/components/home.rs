@@ -1,46 +1,15 @@
-use super::{
-    app::{AppRoute, AppRouterButton},
-    login_demo::LoginComponent,
-};
+use super::app::{AppRoute, AppRouterButton};
 use crate::constants::{self, css::BOXED};
 use yew::prelude::*;
 use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
+use yewtil::{Pure, PureComponent};
 
 /// The root component of sfi-web
-pub struct Home {
-    link: ComponentLink<Self>,
-    route_dispatcher: RouteAgentDispatcher,
-}
+pub type Home = Pure<PureHome>;
 
-pub enum Msg {
-    ShowInventories,
-}
+struct PureHome;
 
-impl Component for Home {
-    type Message = Msg;
-    type Properties = ();
-
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self {
-            link,
-            route_dispatcher: RouteAgentDispatcher::new(),
-        }
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::ShowInventories => {
-                self.route_dispatcher
-                    .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
-                false
-            }
-        }
-    }
-
-    fn change(&mut self, _: Self::Properties) -> ShouldRender {
-        false
-    }
-
+impl PureComponent for Home {
     fn view(&self) -> Html {
         html! {
             <>
