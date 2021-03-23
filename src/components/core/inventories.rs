@@ -50,16 +50,12 @@ impl Component for Inventories {
             }
             Msg::AgentResponse(response) => match response {
                 Response::Inventories(state) => {
-                    log::debug!("{:#?}", state);
                     self.handles = Some(state);
                     true
                 }
                 Response::NewInventoryUuid(uuid) => {
-                    log::debug!("Made new inventory: {:#?}", uuid);
-
                     // Request new state
                     self.link.send_message(Msg::RequestNewState);
-
                     false
                 }
             },

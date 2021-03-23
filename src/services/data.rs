@@ -42,8 +42,6 @@ impl Agent for DataAgent {
     fn handle_input(&mut self, msg: Self::Input, _id: HandlerId) {
         match msg {
             Request::GetInventories => {
-                log::debug!("Get inventories");
-
                 // TODO remove these clones
                 let res = (&self.store).to_vec();
 
@@ -52,8 +50,6 @@ impl Agent for DataAgent {
                 }
             }
             Request::MakeDebugInventory => {
-                log::debug!("Make debug inventory");
-
                 let res = self
                     .store
                     .make_inventory("my inv".to_string(), Uuid::new_v4());
@@ -66,7 +62,12 @@ impl Agent for DataAgent {
     }
 
     fn connected(&mut self, id: HandlerId) {
-        self.subscribers.insert(id);
+        // FIelD `1` oF STrucT `yeW::AGENT::hANnlERiD` Is PRivATE
+        // PRiVATE fIELd rUsTC e0616
+        // if id.1 {}
+        if format!("{:?}", &id).contains("true") {
+            self.subscribers.insert(id);
+        }
     }
 
     fn disconnected(&mut self, id: HandlerId) {

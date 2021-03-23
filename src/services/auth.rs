@@ -63,7 +63,6 @@ impl Agent for AuthAgent {
         // Handle authentication  requests from components and other agents
         match msg {
             Request::GetAuthStatus => {
-                log::debug!("Getting auth status");
                 let output = Rc::new(self.probe_state());
 
                 for sub in self.subscribers.iter() {
@@ -71,7 +70,6 @@ impl Agent for AuthAgent {
                 }
             }
             Request::Login(login_info) => {
-                log::debug!("Logging in");
                 let output = Rc::new(self.login(login_info));
 
                 for sub in self.subscribers.iter() {
@@ -79,7 +77,6 @@ impl Agent for AuthAgent {
                 }
             }
             Request::Signup(signup_info) => {
-                log::debug!("Signing up");
                 let output = Rc::new(self.signup(signup_info));
 
                 for sub in self.subscribers.iter() {
@@ -87,7 +84,6 @@ impl Agent for AuthAgent {
                 }
             }
             Request::Logout => {
-                log::debug!("Logging out");
                 let output = Rc::new(self.logout());
 
                 for sub in self.subscribers.iter() {
@@ -98,7 +94,12 @@ impl Agent for AuthAgent {
     }
 
     fn connected(&mut self, id: HandlerId) {
-        self.subscribers.insert(id);
+        // FIelD `1` oF STrucT `yeW::AGENT::hANnlERiD` Is PRivATE
+        // PRiVATE fIELd rUsTC e0616
+        // if id.1 {}
+        if format!("{:?}", &id).contains("true") {
+            self.subscribers.insert(id);
+        }
     }
 
     fn disconnected(&mut self, id: HandlerId) {

@@ -23,11 +23,11 @@ pub enum AppRoute {
     #[to = "/inventories"]
     Inventories,
 
-    #[to = "/page-not-found"]
-    PageNotFound(String),
-
     #[to = "/!"]
     Home,
+
+    #[to = "{*:any}"]
+    PageNotFound(String),
 }
 
 pub type AppRouter = Router<AppRoute>;
@@ -53,17 +53,13 @@ impl Component for App {
     fn view(&self) -> Html {
         html! {
             <>
+            // TODO implement some kind of nav bar
 
+            // The login component
             <LoginComponent />
 
-                <main>
-                    <AppRouter
-                        render=AppRouter::render(Self::switch)
-                        redirect=AppRouter::redirect(|route: Route| {
-                            AppRoute::PageNotFound(route.route).into()
-                        })
-                    />
-                </main>
+            // The router outlet
+            <AppRouter render=AppRouter::render(Self::handle_route) />
 
             </>
         }
@@ -71,8 +67,8 @@ impl Component for App {
 }
 
 impl App {
-    fn switch(switch: AppRoute) -> Html {
-        match switch {
+    fn handle_route(route: AppRoute) -> Html {
+        match route {
             AppRoute::Home => {
                 html! { <Home /> }
             }
@@ -84,19 +80,17 @@ impl App {
             // AppRoute::PageNotFound(Permissive(route)) => {
             //     html! { <PageNotFound route=route /> }
             // }
-            AppRoute::PageNotFound(data) => {
+            AppRoute::PageNotFound(path) => {
                 html! {
                     <>
 
                     <h1>{ "Page not found" }</h1>
 
-
                     <p>
                         { "The path " }
-                        {  data }
+                        { path }
                         { " didn't match any known routes." }
                     </p>
-
 
                     <p>
                         { "Try navigating back to the home page using the button below:" }
