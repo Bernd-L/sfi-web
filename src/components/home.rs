@@ -1,15 +1,34 @@
 use super::app::{AppRoute, AppRouterButton};
 use crate::constants::{self, css::BOXED};
 use yew::prelude::*;
-use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
-use yewtil::{Pure, PureComponent};
+// use yewtil::{Pure, PureComponent};
+
+// Yewtil currently does not compile 🤦🤦🤦
 
 /// The root component of sfi-web
-pub type Home = Pure<PureHome>;
+// pub type Home = Pure<PureHome>;
+pub type Home = PureHome;
 
-struct PureHome;
+pub struct PureHome;
 
-impl PureComponent for Home {
+// impl PureComponent for Home {
+
+impl Component for Home {
+    type Message = ();
+    type Properties = ();
+
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Self
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        false
+    }
+
+    fn change(&mut self, _: Self::Properties) -> ShouldRender {
+        false
+    }
+
     fn view(&self) -> Html {
         html! {
             <>
