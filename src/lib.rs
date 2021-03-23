@@ -6,8 +6,9 @@ pub(crate) mod services;
 pub(crate) mod types;
 
 use components::app;
+use services::data::DataAgent;
 use wasm_bindgen::prelude::*;
-use yew::web_sys::console;
+use yew::{web_sys::console, Bridged, Dispatched};
 
 /// The app's main entry point
 #[wasm_bindgen(start)]
@@ -20,6 +21,10 @@ pub fn main() -> Result<(), JsValue> {
     // Initiate the logger when not in release mode
     #[cfg(debug_assertions)]
     wasm_logger::init(wasm_logger::Config::default());
+
+    // Create the singleton instances of the agents
+    Box::leak(Box::new(DataAgent::dispatcher()));
+    // Box::leak(Box::new(AuthAgent::dispatcher()));
 
     // Start the yew app
     yew::start_app::<app::App>();

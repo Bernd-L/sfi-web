@@ -1,6 +1,6 @@
 use crate::{
     components::app::{AppRoute, AppRouterButton},
-    services::data::{DataAgent, Request},
+    services::data::{DataAgent, Request, Response},
 };
 use sfi_core::{
     store::{InventoryHandle, Store},
@@ -10,8 +10,10 @@ use yew::{prelude::*, Bridge};
 
 pub enum Msg {
     // NewState(&'static Vec<InventoryHandle<'static>>),
-    NewState(Vec<InventoryHandle<'static>>),
+    // NewState(Vec<InventoryHandle<'static>>),
+    AgentResponse(Response),
     RequestNewState,
+    MakeDebugInventory,
 }
 
 pub struct Inventories {
@@ -26,7 +28,7 @@ impl Component for Inventories {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         // Initiate a bridge to the data agent
-        let mut data_bridge = DataAgent::bridge(link.callback(Msg::NewState));
+        let mut data_bridge = DataAgent::bridge(link.callback(Msg::AgentResponse));
 
         // Request a list of the currently accessible inventory handles
         data_bridge.send(Request::GetInventories);
@@ -41,15 +43,29 @@ impl Component for Inventories {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::NewState(state) => {
-                log::debug!("{:#?}", state);
-                self.handles = Some(state);
-                true
-            }
             Msg::RequestNewState => {
                 self.data_bridge.send(Request::GetInventories);
                 false
             }
+            Msg::MakeDebugInventory => {
+                self.data_bridge.send(Request::MakeDebugInventory);
+                false
+            }
+            Msg::AgentResponse(response) => match response {
+                Response::Inventories(state) => {
+                    log::debug!("{:#?}", state);
+                    self.handles = Some(state);
+                    true
+                }
+                Response::NewInventoryUuid(uuid) => {
+                    log::debug!("Made new inventory: {:#?}", uuid);
+
+                    // Request new state
+                    self.link.send_message(Msg::RequestNewState);
+
+                    false
+                }
+            },
         }
     }
 
@@ -62,6 +78,12 @@ impl Component for Inventories {
             <>
 
             <h1>{ "Inventories" }</h1>
+
+            <button onclick=self.link.callback(|_| Msg::MakeDebugInventory)>
+                { "Make debug inventory" }
+            </button>
+
+            <br /> <br />
 
             <button onclick=self.link.callback(|_| Msg::RequestNewState)>
                 { "Refresh inventories" }

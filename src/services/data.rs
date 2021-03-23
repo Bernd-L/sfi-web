@@ -1,12 +1,19 @@
 use serde::{Deserialize, Serialize};
 use sfi_core::store::{self, InventoryHandle, Store};
 use std::collections::HashSet;
+use uuid::Uuid;
 use yew::worker::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Request {
     GetInventories,
     MakeDebugInventory,
+}
+
+#[derive(Debug)]
+pub enum Response {
+    Inventories(Vec<InventoryHandle<'static>>),
+    NewInventoryUuid(Uuid),
 }
 
 pub struct DataAgent {
@@ -20,7 +27,7 @@ impl Agent for DataAgent {
     type Reach = Context<Self>;
     type Message = ();
     type Input = Request;
-    type Output = Vec<InventoryHandle<'static>>;
+    type Output = Response;
 
     fn create(link: AgentLink<Self>) -> Self {
         Self {
@@ -37,13 +44,23 @@ impl Agent for DataAgent {
             Request::GetInventories => {
                 log::debug!("Get inventories");
 
+                // TODO remove these clones
+                let res = (&self.store).to_vec();
+
                 for sub in self.subscribers.iter() {
-                    self.link.respond(*sub, (&self.store).to_vec())
+                    self.link.respond(*sub, Response::Inventories(res.clone()))
                 }
             }
             Request::MakeDebugInventory => {
-                // TODO implement create inventory
-                // self.store
+                log::debug!("Make debug inventory");
+
+                let res = self
+                    .store
+                    .make_inventory("my inv".to_string(), Uuid::new_v4());
+
+                for sub in self.subscribers.iter() {
+                    self.link.respond(*sub, Response::NewInventoryUuid(res))
+                }
             }
         }
     }
