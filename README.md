@@ -6,7 +6,11 @@ A web-based frontend for sfi (short for Shared Food Inventory), which manages sh
 
 ## Development
 
-Run `trunk serve -d public`
+Run `trunk serve -d public` to simply serve the static frontend files.
+
+If you're developing sfi you'll probably want to use the sfi-workspace (found in the sfi-core repository) and to run `trunk watch -d public` (instead of serve) together with `cargo watch -x run` in sfi-server.
+
+As of right now, `trunk` emits colorless output. If this bothers you, consider running `cargo watch` (which is equivalent to `cargo watch -x check`) in this repository as well to get colored output in addition to automatic re-compilation.
 
 ## Licence & Copyright
 
