@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sfi_core::store::{self, InventoryHandle, Store};
+use sfi_core::store::{InventoryHandle, Store};
 use std::collections::HashSet;
 use uuid::Uuid;
 use yew::worker::*;

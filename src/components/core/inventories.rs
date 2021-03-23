@@ -2,10 +2,7 @@ use crate::{
     components::app::{AppRoute, AppRouterButton},
     services::data::{DataAgent, Request, Response},
 };
-use sfi_core::{
-    store::{InventoryHandle, Store},
-    Inventory,
-};
+use sfi_core::{store::InventoryHandle, Inventory};
 use yew::{prelude::*, Bridge};
 
 pub enum Msg {

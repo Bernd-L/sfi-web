@@ -1,11 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use sfi_core::{
-    store::{self, InventoryHandle, Store},
-    users::{StatusNotice, UserIdentifier, UserInfo, UserLogin, UserSignup},
-};
+use sfi_core::users::{StatusNotice, UserInfo, UserLogin, UserSignup};
 use std::{collections::HashSet, rc::Rc};
-use uuid::Uuid;
 use yew::{
     format::{Json, Nothing},
     services::{
@@ -14,10 +10,9 @@ use yew::{
     },
     web_sys::RequestCredentials,
     worker::*,
-    ComponentLink,
 };
 
-use crate::components::login_demo::AuthState;
+use crate::components::login::AuthState;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Request {
@@ -36,8 +31,6 @@ pub enum Msg {
 pub struct AuthAgent {
     link: AgentLink<AuthAgent>,
     subscribers: HashSet<HandlerId>,
-
-    state: Rc<AuthState>,
 }
 
 impl Agent for AuthAgent {
@@ -50,7 +43,6 @@ impl Agent for AuthAgent {
         Self {
             link,
             subscribers: HashSet::new(),
-            state: Rc::new(AuthState::Initial),
         }
     }
 

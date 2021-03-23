@@ -1,17 +1,7 @@
-use anyhow::Result;
+use crate::services::auth::{AuthAgent, Request};
 use sfi_core::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
 use std::rc::Rc;
-use yew::{
-    format::{Json, Nothing},
-    prelude::*,
-    services::{
-        fetch::{FetchOptions, FetchTask},
-        FetchService,
-    },
-    web_sys::{console, RequestCredentials},
-};
-
-use crate::services::auth::{self, AuthAgent, Request};
+use yew::{prelude::*, services::fetch::FetchTask};
 
 /// The root component of sfi-web
 pub struct LoginComponent {

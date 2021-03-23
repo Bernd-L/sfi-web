@@ -1,11 +1,6 @@
-use crate::components::{core::inventories::Inventories, home::Home, login_demo::LoginComponent};
-use sfi_core::store::Store;
+use crate::components::{core::inventories::Inventories, home::Home, login::LoginComponent};
 use uuid::Uuid;
-use yew::{
-    prelude::*,
-    virtual_dom::{Transformer, VComp},
-    web_sys::Url,
-};
+use yew::prelude::*;
 use yew_router::{components::RouterAnchor, prelude::*, switch::Permissive};
 
 /// The root component of sfi-web
@@ -77,8 +72,6 @@ impl Component for App {
 
 impl App {
     fn switch(switch: AppRoute) -> Html {
-        let store = Store::new();
-
         match switch {
             AppRoute::Home => {
                 html! { <Home /> }
