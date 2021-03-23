@@ -24,7 +24,7 @@ pub enum AppRoute {
     Inventories,
 
     #[to = "/page-not-found"]
-    PageNotFound(Permissive<String>),
+    PageNotFound(String),
 
     #[to = "/!"]
     Home,
@@ -60,7 +60,7 @@ impl Component for App {
                     <AppRouter
                         render=AppRouter::render(Self::switch)
                         redirect=AppRouter::redirect(|route: Route| {
-                            AppRoute::PageNotFound(Permissive(Some(route.route))).into()
+                            AppRoute::PageNotFound(route.route).into()
                         })
                     />
                 </main>
@@ -84,6 +84,30 @@ impl App {
             // AppRoute::PageNotFound(Permissive(route)) => {
             //     html! { <PageNotFound route=route /> }
             // }
+            AppRoute::PageNotFound(data) => {
+                html! {
+                    <>
+
+                    <h1>{ "Page not found" }</h1>
+
+
+                    <p>
+                        { "The path " }
+                        {  data }
+                        { " didn't match any known routes." }
+                    </p>
+
+
+                    <p>
+                        { "Try navigating back to the home page using the button below:" }
+                    </p>
+
+                    <AppRouterButton route=AppRoute::Home>{ "Go to home" }</AppRouterButton>
+
+                    </>
+                }
+            }
+
             _ => {
                 html! {<span>{ "TODO implement this" }</span>}
             }
