@@ -2,7 +2,13 @@ use serde::{Deserialize, Serialize};
 use sfi_core::store::{InventoryHandle, Store};
 use std::collections::HashSet;
 use uuid::Uuid;
-use yew::worker::*;
+use yew::{
+    format::Json,
+    services::{storage::Area, StorageService},
+    worker::*,
+};
+
+const EVENT_STORE_KEY: &'static str = "sfi.events.store";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Request {
@@ -19,6 +25,7 @@ pub enum Response {
 pub struct DataAgent {
     link: AgentLink<DataAgent>,
     subscribers: HashSet<HandlerId>,
+    storage_service: StorageService,
 
     store: Store<'static>,
 }
@@ -30,10 +37,26 @@ impl Agent for DataAgent {
     type Output = Response;
 
     fn create(link: AgentLink<Self>) -> Self {
+        // Get a reference to localStorage
+        let mut storage_service =
+            StorageService::new(Area::Local).expect("Cannot use localStorage");
+
+        // Load the event store from localStorage
+        let store = {
+            if let Json(Ok(store)) = storage_service.restore(EVENT_STORE_KEY) {
+                // Load the event store from localStorage
+                store
+            } else {
+                // If no such entry exists, create a new one
+                Store::new()
+            }
+        };
+
         Self {
             link,
             subscribers: HashSet::new(),
-            store: Store::new(),
+            store,
+            storage_service,
         }
     }
 
@@ -54,6 +77,8 @@ impl Agent for DataAgent {
                     .store
                     .make_inventory("my inv".to_string(), Uuid::new_v4());
 
+                self.persist_data();
+
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, Response::NewInventoryUuid(res))
                 }
@@ -72,5 +97,12 @@ impl Agent for DataAgent {
 
     fn disconnected(&mut self, id: HandlerId) {
         self.subscribers.remove(&id);
+    }
+}
+
+impl DataAgent {
+    fn persist_data(&mut self) -> () {
+        self.storage_service
+            .store(EVENT_STORE_KEY, Json(&self.store));
     }
 }
