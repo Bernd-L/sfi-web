@@ -61,8 +61,6 @@ impl Agent for AuthAgent {
         });
 
         for sub in self.subscribers.iter() {
-            log::debug!("Sending response to {:?}\nResponse is: {:?}", &sub, &output);
-
             self.link.respond(*sub, output.clone());
         }
 
@@ -70,14 +68,13 @@ impl Agent for AuthAgent {
         self.auth_state = output;
     }
 
-    fn handle_input(&mut self, msg: Self::Input, id: HandlerId) {
+    fn handle_input(&mut self, msg: Self::Input, _id: HandlerId) {
         // Handle authentication  requests from components and other agents
         match msg {
             AuthAgentRequest::GetAuthStatus => {
                 let output = Rc::new(self.probe_state());
 
                 for sub in self.subscribers.iter() {
-                    log::debug!("Sending initial to {:?}\nResponse is: {:?}", &sub, &output);
                     self.link.respond(*sub, output.clone());
                 }
 

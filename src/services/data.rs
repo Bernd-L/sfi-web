@@ -80,11 +80,7 @@ impl Agent for DataAgent {
 
     fn update(&mut self, msg: Self::Message) {
         match msg {
-            Msg::NewAuthState(auth_state) => {
-                log::debug!("Received response is {:?}", &auth_state);
-
-                self.auth_state = auth_state;
-            }
+            Msg::NewAuthState(auth_state) => self.auth_state = auth_state,
         };
     }
 

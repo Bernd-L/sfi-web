@@ -90,11 +90,7 @@ impl Component for LoginComponent {
             Msg::ChangeName(name) => self.form.name = name,
 
             // Handle auth agent callbacks
-            Msg::NewAuthState(state) => {
-                log::debug!("Received response is {:?}", &state);
-
-                self.state = state
-            }
+            Msg::NewAuthState(state) => self.state = state,
         }
 
         true

@@ -39,8 +39,8 @@ impl Component for DebugTools {
             Msg::DeleteAllData => self.data_bridge.send(DataAgentRequest::DeleteAllData),
             Msg::ProbeAuth => self.auth_bridge.send(AuthAgentRequest::GetAuthStatus),
             Msg::DataAgentResponse(_response) => {}
-            Msg::AuthAgentResponse(auth_state) => {
-                log::debug!("Received response is {:?}", &auth_state);
+            Msg::AuthAgentResponse(_auth_state) => {
+                // log::debug!("Received response is {:?}", &_auth_state);
             }
         }
 
