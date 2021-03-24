@@ -58,7 +58,7 @@ impl Component for LoginComponent {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         // Initiate a bridge to the auth agent
-        let mut auth_bridge = AuthAgent::bridge(link.callback(Msg::NewAuthState));
+        let auth_bridge = AuthAgent::bridge(link.callback(Msg::NewAuthState));
 
         // Request the current authentication status
         // auth_bridge.send(AuthAgentRequest::GetAuthStatus);

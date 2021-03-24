@@ -84,11 +84,11 @@ impl Agent for DataAgent {
         };
     }
 
-    fn handle_input(&mut self, msg: Self::Input, _id: HandlerId) {
+    fn handle_input(&mut self, msg: Self::Input, id: HandlerId) {
         match msg {
             DataAgentRequest::GetInventories => {
                 // TODO remove these clones
-                let res = (&self.store).to_vec();
+                let res = &self.store.to_vec();
 
                 for sub in self.subscribers.iter() {
                     self.link
@@ -96,15 +96,24 @@ impl Agent for DataAgent {
                 }
             }
             DataAgentRequest::MakeDebugInventory => {
-                let res = self
-                    .store
-                    .make_inventory("my inv".to_string(), Uuid::new_v4());
+                let res = if let AuthState::LoggedIn(user_info) = self.auth_state.as_ref() {
+                    self.store
+                        .make_inventory("debug inv".to_string(), user_info.uuid)
+                } else {
+                    self.store
+                        .make_inventory("debug inv".to_string(), Uuid::new_v4())
+                };
 
                 self.persist_data();
 
+                self.link
+                    .respond(id, DataAgentResponse::NewInventoryUuid(res));
+
                 for sub in self.subscribers.iter() {
-                    self.link
-                        .respond(*sub, DataAgentResponse::NewInventoryUuid(res))
+                    self.link.respond(
+                        *sub,
+                        DataAgentResponse::Inventories(self.store.to_vec().clone()),
+                    )
                 }
             }
             DataAgentRequest::CreateInventory(name) => {
@@ -113,9 +122,14 @@ impl Agent for DataAgent {
 
                     self.persist_data();
 
+                    self.link
+                        .respond(id, DataAgentResponse::NewInventoryUuid(res));
+
                     for sub in self.subscribers.iter() {
-                        self.link
-                            .respond(*sub, DataAgentResponse::NewInventoryUuid(res))
+                        self.link.respond(
+                            *sub,
+                            DataAgentResponse::Inventories(self.store.to_vec().clone()),
+                        )
                     }
                 }
             }

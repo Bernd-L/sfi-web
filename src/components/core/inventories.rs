@@ -10,7 +10,6 @@ pub enum Msg {
     // NewState(Vec<InventoryHandle<'static>>),
     AgentResponse(DataAgentResponse),
     RequestNewState,
-    MakeDebugInventory,
 }
 
 pub struct Inventories {
@@ -44,20 +43,12 @@ impl Component for Inventories {
                 self.data_bridge.send(DataAgentRequest::GetInventories);
                 false
             }
-            Msg::MakeDebugInventory => {
-                self.data_bridge.send(DataAgentRequest::MakeDebugInventory);
-                false
-            }
             Msg::AgentResponse(response) => match response {
                 DataAgentResponse::Inventories(state) => {
                     self.handles = Some(state);
                     true
                 }
-                DataAgentResponse::NewInventoryUuid(uuid) => {
-                    // Request new state
-                    self.link.send_message(Msg::RequestNewState);
-                    false
-                }
+                DataAgentResponse::NewInventoryUuid(_uuid) => false,
             },
         }
     }
@@ -72,19 +63,16 @@ impl Component for Inventories {
 
             <h1>{ "Inventories" }</h1>
 
-            <button onclick=self.link.callback(|_| Msg::MakeDebugInventory)>
-                { "Make debug inventory" }
-            </button>
-
-            <br /> <br />
-
             <button onclick=self.link.callback(|_| Msg::RequestNewState)>
                 { "Refresh inventories" }
-            </button>
+            </button>  { " " }
+
+            <AppRouterButton route=AppRoute::Home>{ "Go to home" }</AppRouterButton> { " " }
+
+            // Create inventory
+            <AppRouterButton route=AppRoute::CreateInventory>{ "New inventory" }</AppRouterButton>
 
             <br /> <br />
-
-            <AppRouterButton route=AppRoute::Home>{ "Go to home" }</AppRouterButton>
 
             { self.view_inventories() }
 
@@ -113,8 +101,8 @@ impl Inventories {
         html! {
 
             <div>
-                // Or maybe use an h1, or h2?
-                <span>{ inventory.name() }</span>
+            // Or maybe use an h1, or h2?
+            <span>{ inventory.name() }</span>
             </div>
 
         }

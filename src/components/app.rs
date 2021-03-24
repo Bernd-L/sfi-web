@@ -1,9 +1,12 @@
 use crate::components::{
-    core::inventories::Inventories, debug_tools::DebugTools, home::Home, login::LoginComponent,
+    core::{create_inventory::CreateInventory, inventories::Inventories},
+    debug_tools::DebugTools,
+    home::Home,
+    login::LoginComponent,
 };
 use uuid::Uuid;
 use yew::prelude::*;
-use yew_router::{components::RouterAnchor, prelude::*, switch::Permissive};
+use yew_router::{components::RouterAnchor, prelude::*};
 
 /// The root component of sfi-web
 pub struct App;
@@ -18,6 +21,9 @@ pub enum AppRoute {
 
     #[to = "/account"]
     AccountSettings,
+
+    #[to = "/inventories/new"]
+    CreateInventory,
 
     #[to = "/inventories/{uuid}"]
     Inventory(Uuid),
@@ -81,6 +87,9 @@ impl App {
             AppRoute::Inventories => {
                 html! { <Inventories /> }
             }
+            AppRoute::CreateInventory => {
+                html! { <CreateInventory /> }
+            }
 
             // TODO implement 404
             // AppRoute::PageNotFound(Permissive(route)) => {
@@ -114,6 +123,7 @@ impl App {
         }
     }
 
+    #[allow(unreachable_code)]
     fn view_debug_tools(&self) -> Html {
         // Include debug tools in debug builds
         #[cfg(debug_assertions)]
