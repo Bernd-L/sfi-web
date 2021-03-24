@@ -57,11 +57,11 @@ impl Component for LoginComponent {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        // Initiate a bridge to the data agent
+        // Initiate a bridge to the auth agent
         let mut auth_bridge = AuthAgent::bridge(link.callback(Msg::NewAuthState));
 
         // Request the current authentication status
-        auth_bridge.send(AuthAgentRequest::GetAuthStatus);
+        // auth_bridge.send(AuthAgentRequest::GetAuthStatus);
 
         Self {
             state: Rc::new(AuthState::Initial),
@@ -90,7 +90,11 @@ impl Component for LoginComponent {
             Msg::ChangeName(name) => self.form.name = name,
 
             // Handle auth agent callbacks
-            Msg::NewAuthState(state) => self.state = state,
+            Msg::NewAuthState(state) => {
+                log::debug!("Received response is {:?}", &state);
+
+                self.state = state
+            }
         }
 
         true
@@ -194,7 +198,7 @@ impl LoginComponent {
 
     fn view_state(&self) -> Html {
         match self.state.as_ref() {
-            AuthState::Probing(_) => html! {<p>{ "Fetching state..." }</p>},
+            AuthState::Probing(_) => html! {<p>{ "Fetching auth state..." }</p>},
             AuthState::Initial => {
                 html! {<p>{ "Not logged in" }</p>}
             }

@@ -31,6 +31,9 @@ pub enum Msg {
 pub struct AuthAgent {
     link: AgentLink<AuthAgent>,
     subscribers: HashSet<HandlerId>,
+
+    // Avoid dropping requests
+    auth_state: Rc<AuthState>,
 }
 
 impl Agent for AuthAgent {
@@ -40,9 +43,12 @@ impl Agent for AuthAgent {
     type Output = Rc<AuthState>;
 
     fn create(link: AgentLink<Self>) -> Self {
+        link.send_input(AuthAgentRequest::GetAuthStatus);
+
         Self {
             link,
             subscribers: HashSet::new(),
+            auth_state: Rc::new(AuthState::Initial),
         }
     }
 
@@ -55,19 +61,28 @@ impl Agent for AuthAgent {
         });
 
         for sub in self.subscribers.iter() {
+            log::debug!("Sending response to {:?}\nResponse is: {:?}", &sub, &output);
+
             self.link.respond(*sub, output.clone());
         }
+
+        // Store the new AuthState in self
+        self.auth_state = output;
     }
 
-    fn handle_input(&mut self, msg: Self::Input, _id: HandlerId) {
+    fn handle_input(&mut self, msg: Self::Input, id: HandlerId) {
         // Handle authentication  requests from components and other agents
         match msg {
             AuthAgentRequest::GetAuthStatus => {
                 let output = Rc::new(self.probe_state());
 
                 for sub in self.subscribers.iter() {
+                    log::debug!("Sending initial to {:?}\nResponse is: {:?}", &sub, &output);
                     self.link.respond(*sub, output.clone());
                 }
+
+                // Store the new AuthState in self
+                self.auth_state = output;
             }
             AuthAgentRequest::Login(login_info) => {
                 let output = Rc::new(self.login(login_info));
@@ -75,6 +90,9 @@ impl Agent for AuthAgent {
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, output.clone());
                 }
+
+                // Store the new AuthState in self
+                self.auth_state = output;
             }
             AuthAgentRequest::Signup(signup_info) => {
                 let output = Rc::new(self.signup(signup_info));
@@ -82,6 +100,9 @@ impl Agent for AuthAgent {
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, output.clone());
                 }
+
+                // Store the new AuthState in self
+                self.auth_state = output;
             }
             AuthAgentRequest::Logout => {
                 let output = Rc::new(self.logout());
@@ -89,6 +110,9 @@ impl Agent for AuthAgent {
                 for sub in self.subscribers.iter() {
                     self.link.respond(*sub, output.clone());
                 }
+
+                // Store the new AuthState in self
+                self.auth_state = output;
             }
         }
     }

@@ -1,6 +1,6 @@
 use crate::components::login::AuthState;
 
-use super::auth::{AuthAgent, AuthAgentRequest as AuthRequest};
+use super::auth::{AuthAgent, AuthAgentRequest};
 use serde::{Deserialize, Serialize};
 use sfi_core::store::{InventoryHandle, Store};
 use std::{collections::HashSet, rc::Rc};
@@ -62,19 +62,29 @@ impl Agent for DataAgent {
             }
         };
 
+        // Initiate a bridge to the auth agent
+        let mut auth_bridge = AuthAgent::bridge(link.callback(Msg::NewAuthState));
+
+        // Request the current authentication status
+        // auth_bridge.send(AuthAgentRequest::GetAuthStatus);
+
         Self {
             subscribers: HashSet::new(),
             store,
             local_storage,
             auth_state: Rc::new(AuthState::Initial),
-            auth_bridge: AuthAgent::bridge(link.callback(Msg::NewAuthState)),
+            auth_bridge,
             link,
         }
     }
 
     fn update(&mut self, msg: Self::Message) {
         match msg {
-            Msg::NewAuthState(auth_state) => self.auth_state = auth_state,
+            Msg::NewAuthState(auth_state) => {
+                log::debug!("Received response is {:?}", &auth_state);
+
+                self.auth_state = auth_state;
+            }
         };
     }
 
