@@ -1,5 +1,8 @@
 use crate::{
-    components::app::{AppRoute, AppRouterButton},
+    components::{
+        app::{AppRoute, AppRouterButton},
+        core::inventory_card::InventoryCard,
+    },
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
 use sfi_core::{store::InventoryHandle, Inventory};
@@ -74,7 +77,9 @@ impl Component for Inventories {
 
             <br /> <br />
 
-            { self.view_inventories() }
+            <div class="sfi-cards-container">
+                { self.view_inventories() }
+            </div>
 
             </>
         }
@@ -98,13 +103,6 @@ impl Inventories {
     }
 
     fn view_inventory(inventory: &Inventory) -> Html {
-        html! {
-
-            <div>
-            // Or maybe use an h1, or h2?
-            <span>{ inventory.name() }</span>
-            </div>
-
-        }
+        html! { <InventoryCard inventory=inventory /> }
     }
 }

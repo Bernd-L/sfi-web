@@ -14,6 +14,7 @@ h5 *,
 h6 *,
 .titel {
   font-family: "Quicksand", sans-serif;
+  background-color: inherit;
 }
 
 button:not(:disabled) {
@@ -26,8 +27,38 @@ select {
   border: solid #282c33;
 }
 
-* {
+body,
+button,
+input,
+a {
   font-family: "Raleway", "system-ui", sans-serif;
   color: white;
   background-color: #21252b;
+}
+
+.sfi-card {
+  background-color: #2e333a;
+
+  border-radius: 10px;
+  box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    0 1px 3px 0 rgba(0, 0, 0, 0.12);
+
+  transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  display: block;
+  position: relative;
+  padding: 16px;
+  border-radius: 7px;
+}
+
+.sfi-subtitle {
+  margin-top: -4px;
+  margin-bottom: 16px;
+  color: hsla(0, 0%, 100%, 0.7);
+  display: block;
+}
+
+.sfi-cards-container {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 }
