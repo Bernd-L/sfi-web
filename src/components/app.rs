@@ -91,10 +91,7 @@ impl App {
                 html! { <CreateInventory /> }
             }
 
-            // TODO implement 404
-            // AppRoute::PageNotFound(Permissive(route)) => {
-            //     html! { <PageNotFound route=route /> }
-            // }
+            // The 404-like display
             AppRoute::PageNotFound(path) => {
                 html! {
                     <>
