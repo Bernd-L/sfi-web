@@ -2,7 +2,10 @@ use crate::components::login::AuthState;
 
 use super::auth::{AuthAgent, AuthAgentRequest};
 use serde::{Deserialize, Serialize};
-use sfi_core::store::{InventoryHandle, Store};
+use sfi_core::{
+    store::{InventoryHandle, Store},
+    Inventory, Item,
+};
 use std::{collections::HashSet, rc::Rc};
 use uuid::Uuid;
 use yew::{
@@ -19,12 +22,16 @@ pub enum DataAgentRequest {
     MakeDebugInventory,
     CreateInventory(String),
     DeleteAllData,
+    GetInventory(Uuid),
 }
 
 #[derive(Debug)]
 pub enum DataAgentResponse {
     Inventories(Vec<InventoryHandle<'static>>),
     NewInventoryUuid(Uuid),
+
+    Inventory(Inventory),
+    InvalidInventoryUuid,
 }
 
 pub enum Msg {
@@ -143,6 +150,18 @@ impl Agent for DataAgent {
                     self.link
                         .respond(*sub, DataAgentResponse::Inventories(res.clone()))
                 }
+            }
+            DataAgentRequest::GetInventory(inv_uuid) => {
+                // TODO remove these clones
+                let res = if let Some(inventory) =
+                    self.store.iter().find(|inv| *inv.uuid() == inv_uuid)
+                {
+                    DataAgentResponse::Inventory((**inventory).clone())
+                } else {
+                    DataAgentResponse::InvalidInventoryUuid
+                };
+
+                self.link.respond(id, res)
             }
         }
     }
