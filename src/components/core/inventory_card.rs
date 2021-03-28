@@ -54,8 +54,8 @@ impl Component for InventoryCard {
                 <h3>{ self.props.inventory.name() }</h3>
                 <span class="sfi-subtitle">{ self.props.inventory.uuid() }</span>
 
-                <AppRouterButton route=AppRoute::Inventory(self.props.inventory.uuid().clone())>{ "Open inventory" }</AppRouterButton> { " " }
-                <button disabled=true onclick=self.link.callback(|_| Msg::EditInventory)>{ "Edit" }</button> { " " }
+                <AppRouterButton route=AppRoute::Items(self.props.inventory.uuid().clone())>{ "Open inventory" }</AppRouterButton> { " " }
+                <AppRouterButton route=AppRoute::UpdateInventory(self.props.inventory.uuid().clone())>{ "Edit" }</AppRouterButton> { " " }
                 <button disabled=true onclick=self.link.callback(|_| Msg::ExportInventory)>{ "Export" }</button> { " " }
             </div>
         }

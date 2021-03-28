@@ -22,11 +22,29 @@ pub enum AppRoute {
     #[to = "/account"]
     AccountSettings,
 
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/new"]
+    CreateUnit(Uuid, Uuid),
+
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/{un_uuid}"]
+    UpdateUnit(Uuid, Uuid, Uuid),
+
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units"]
+    Units(Uuid, Uuid),
+
+    #[to = "/inventories/{inv_uuid}/items/new"]
+    CreateItem(Uuid),
+
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}"]
+    UpdateItem(Uuid, Uuid),
+
+    #[to = "/inventories/{inv_uuid}/items"]
+    Items(Uuid),
+
     #[to = "/inventories/new"]
     CreateInventory,
 
-    #[to = "/inventories/{uuid}"]
-    Inventory(Uuid),
+    #[to = "/inventories/{inv_uuid}"]
+    UpdateInventory(Uuid),
 
     #[to = "/inventories"]
     Inventories,
@@ -114,8 +132,36 @@ impl App {
                 }
             }
 
-            _ => {
-                html! {<span>{ "TODO implement this" }</span>}
+            // TODO implement the route handlers
+            AppRoute::Login => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::Register => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::AccountSettings => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::CreateUnit(inv_uuid, it_uuid) => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::UpdateUnit(inv_uuid, it_uuid, un_uuid) => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::Units(inv_uuid, it_uuid) => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::CreateItem(inv_uuid) => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::UpdateItem(inv_uuid, it_uuid) => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::Items(inv_uuid) => {
+                html! { "still need to implement this"}
+            }
+            AppRoute::UpdateInventory(inv_uuid) => {
+                html! { "still need to implement this"}
             }
         }
     }
