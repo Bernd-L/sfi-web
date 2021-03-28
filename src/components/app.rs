@@ -13,40 +13,40 @@ pub struct App;
 
 #[derive(Clone, Debug, Switch)]
 pub enum AppRoute {
-    #[to = "/login"]
+    #[to = "/login!"]
     Login,
 
-    #[to = "/register"]
+    #[to = "/register!"]
     Register,
 
-    #[to = "/account"]
+    #[to = "/account!"]
     AccountSettings,
 
-    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/new"]
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/new!"]
     CreateUnit(Uuid, Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/{un_uuid}"]
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/{un_uuid}!"]
     UpdateUnit(Uuid, Uuid, Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units"]
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units!"]
     Units(Uuid, Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items/new"]
+    #[to = "/inventories/{inv_uuid}/items/new!"]
     CreateItem(Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items/{it_uuid}"]
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}!"]
     UpdateItem(Uuid, Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items"]
+    #[to = "/inventories/{inv_uuid}/items!"]
     Items(Uuid),
 
-    #[to = "/inventories/new"]
+    #[to = "/inventories/new!"]
     CreateInventory,
 
-    #[to = "/inventories/{inv_uuid}"]
+    #[to = "/inventories/{inv_uuid}!"]
     UpdateInventory(Uuid),
 
-    #[to = "/inventories"]
+    #[to = "/inventories!"]
     Inventories,
 
     #[to = "/!"]
