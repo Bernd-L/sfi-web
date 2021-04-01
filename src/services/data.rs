@@ -21,6 +21,7 @@ pub enum DataAgentRequest {
     GetInventories,
     MakeDebugInventory,
     CreateInventory(String),
+    CreateItem(Uuid, String, Option<String>),
     DeleteAllData,
     GetInventory(Uuid),
 }

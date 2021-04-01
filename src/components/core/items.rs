@@ -1,4 +1,10 @@
-use crate::services::data::{DataAgent, DataAgentRequest, DataAgentResponse};
+use crate::{
+    components::{
+        app::{AppRoute, AppRouterButton},
+        core::item_card::ItemCard,
+    },
+    services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
+};
 use sfi_core::{Inventory, Item};
 use uuid::Uuid;
 use yew::prelude::*;
@@ -7,10 +13,12 @@ pub struct Items {
     link: ComponentLink<Self>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
     inventory: Option<Inventory>,
+    inventory_uuid: Uuid,
 }
 
 pub enum Msg {
     AgentResponse(DataAgentResponse),
+    RequestNewState,
 }
 
 #[derive(Clone, Properties)]
@@ -23,18 +31,26 @@ impl Component for Items {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let inventory_uuid = props.inventory_uuid;
+
         let mut data_bridge = DataAgent::bridge(link.callback(Msg::AgentResponse));
-        data_bridge.send(DataAgentRequest::GetInventory(props.inventory_uuid));
+        data_bridge.send(DataAgentRequest::GetInventory(inventory_uuid));
 
         Self {
             link,
             data_bridge,
             inventory: None,
+            inventory_uuid,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
+            Msg::RequestNewState => {
+                self.data_bridge
+                    .send(DataAgentRequest::GetInventory(self.inventory_uuid));
+                false
+            }
             Msg::AgentResponse(res) => match res {
                 DataAgentResponse::Inventory(inventory) => {
                     self.inventory = Some(inventory);
@@ -67,22 +83,43 @@ impl Component for Items {
 
             <h1>{ "Items of " } {inventory.name()}</h1>
 
-            // <button onclick=self.link.callback(|_| Msg::RequestNewState)>
-            //     { "Refresh inventories" }
-            // </button>  { " " }
+            <button onclick=self.link.callback(|_| Msg::RequestNewState)>
+                { "Refresh items" }
+            </button>  { " " }
 
-            // <AppRouterButton route=AppRoute::Home>{ "Go to home" }</AppRouterButton> { " " }
+            <AppRouterButton route=AppRoute::Home>{ "Go to home" }</AppRouterButton> { " " }
+            <AppRouterButton route=AppRoute::Inventories>{ "Go to inventories" }</AppRouterButton> { " " }
 
-            // // Create inventory
-            // <AppRouterButton route=AppRoute::CreateInventory>{ "New inventory" }</AppRouterButton>
+            // Create inventory
+            <AppRouterButton route=AppRoute::CreateItem(self.inventory_uuid)>{ "New item" }</AppRouterButton>
 
-            // <br /> <br />
+            <br /> <br />
 
-            // <div class="sfi-cards-container">
-            //     { self.view_inventories() }
-            // </div>
+            <div class="sfi-cards-container">
+                { self.view_items() }
+            </div>
 
             </>
         }
+    }
+}
+
+impl Items {
+    fn view_items(&self) -> Html {
+        let items = if let Some(inventory) = &self.inventory {
+            inventory.items()
+        } else {
+            return html! {};
+        };
+
+        if items.is_empty() {
+            html! { <p>{ "This inventory doesn't currently contain any items." }</p> }
+        } else {
+            items.iter().map(|item| Self::view_item(item)).collect()
+        }
+    }
+
+    fn view_item(item: &Item) -> Html {
+        html! { <ItemCard item=item /> }
     }
 }
