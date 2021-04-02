@@ -43,7 +43,7 @@ impl Component for CreateItem {
         data_bridge.send(DataAgentRequest::GetInventory(inventory_uuid));
 
         Self {
-            data_bridge: DataAgent::bridge(link.callback(Msg::DataAgentResponse)),
+            data_bridge,
             route_dispatcher: RouteAgentDispatcher::new(),
             name: String::new(),
             is_busy: false,
@@ -81,14 +81,15 @@ impl Component for CreateItem {
                 true
             }
             Msg::DataAgentResponse(response) => match response {
-                DataAgentResponse::NewInventoryUuid(_uuid) => {
-                    self.route_dispatcher
-                        .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
-
-                    self.is_busy = false;
+                DataAgentResponse::Inventory(inventory) => {
+                    self.inventory = Some(inventory);
                     true
                 }
-                _ => false,
+                DataAgentResponse::InvalidInventoryUuid => {
+                    self.inventory = None;
+                    true
+                }
+                DataAgentResponse::Inventories(_) | DataAgentResponse::NewInventoryUuid(_) => false,
             },
         }
     }
