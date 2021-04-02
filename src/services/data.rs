@@ -164,6 +164,9 @@ impl Agent for DataAgent {
 
                 self.link.respond(id, res)
             }
+            DataAgentRequest::CreateItem(inventory_uuid, name, ean) => {
+                todo!("Implement CreateItem")
+            }
         }
     }
 

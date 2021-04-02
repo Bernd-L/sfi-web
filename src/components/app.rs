@@ -1,5 +1,8 @@
 use crate::components::{
-    core::{create_inventory::CreateInventory, inventories::Inventories, items::Items},
+    core::{
+        create_inventory::CreateInventory, create_item::CreateItem, inventories::Inventories,
+        items::Items,
+    },
     debug_tools::DebugTools,
     home::Home,
     login::LoginComponent,
@@ -152,7 +155,7 @@ impl App {
                 html! { "still need to implement this"}
             }
             AppRoute::CreateItem(inv_uuid) => {
-                html! { "still need to implement this"}
+                html! { <CreateItem inventory_uuid=inv_uuid /> }
             }
             AppRoute::UpdateItem(inv_uuid, it_uuid) => {
                 html! { "still need to implement this"}

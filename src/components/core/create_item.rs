@@ -1,4 +1,4 @@
-use sfi_core::Item;
+use sfi_core::{Inventory, Item};
 use uuid::Uuid;
 use yew::prelude::*;
 use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
@@ -11,6 +11,9 @@ use crate::{
 pub struct CreateItem {
     link: ComponentLink<Self>,
     name: String,
+    inventory: Option<Inventory>,
+    inventory_uuid: Uuid,
+
     ean: Option<String>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
     route_dispatcher: RouteAgentDispatcher,
@@ -46,6 +49,8 @@ impl Component for CreateItem {
             is_busy: false,
             ean: None,
             link,
+            inventory: None,
+            inventory_uuid,
         }
     }
 
@@ -58,8 +63,11 @@ impl Component for CreateItem {
             }
             Msg::Confirm => {
                 // Give the new card to the listing component
-                self.data_bridge
-                    .send(DataAgentRequest::CreateItem(self.name.clone()));
+                self.data_bridge.send(DataAgentRequest::CreateItem(
+                    self.inventory_uuid,
+                    self.name.clone(),
+                    self.ean.clone(),
+                ));
 
                 self.is_busy = true;
                 true
