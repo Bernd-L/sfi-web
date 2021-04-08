@@ -1,12 +1,13 @@
 use crate::components::login::AuthState;
 
 use super::auth::{AuthAgent, AuthAgentRequest};
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use sfi_core::{
-    store::{InventoryHandle, Store},
+    store::{InventoryHandle, ProjectionEntry, ProjectionEvent, Store},
     Inventory, Item,
 };
-use std::{collections::HashSet, rc::Rc};
+use std::{collections::HashSet, rc::Rc, sync::Arc};
 use uuid::Uuid;
 use yew::{
     format::Json,
@@ -33,6 +34,8 @@ pub enum DataAgentResponse {
 
     Inventory(Inventory),
     InvalidInventoryUuid,
+
+    NewItemUuid(Uuid),
 }
 
 pub enum Msg {
@@ -165,7 +168,28 @@ impl Agent for DataAgent {
                 self.link.respond(id, res)
             }
             DataAgentRequest::CreateItem(inventory_uuid, name, ean) => {
-                todo!("Implement CreateItem")
+                let res = if let Some(inventory) =
+                    // Try to find the desired inventory
+                    self
+                    .store
+                    .iter_mut()
+                    .find(|inv| *inv.uuid() == inventory_uuid)
+                {
+                    let create_event = Item::create(&Arc::new((**inventory).clone()), name, ean);
+
+                    if let ProjectionEntry::Item(item) = *create_event {
+                        let uuid = item.uuid();
+                        inventory.create_item(item);
+
+                        DataAgentResponse::NewItemUuid(*uuid)
+                    } else {
+                        panic!("Big oof")
+                    }
+                } else {
+                    DataAgentResponse::InvalidInventoryUuid
+                };
+
+                self.link.respond(id, res)
             }
         }
     }
