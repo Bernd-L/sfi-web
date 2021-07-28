@@ -23,6 +23,14 @@ pub enum DataAgentRequest {
     GetInventories,
     MakeDebugInventory,
     CreateInventory(String),
+    UpdateInventory {
+        target: Arc<RwLock<Inventory>>,
+        name: String,
+        owner: Uuid,
+        admins: Vec<Uuid>,
+        writables: Vec<Uuid>,
+        readables: Vec<Uuid>,
+    },
     CreateItem(Uuid, String, Option<String>),
     DeleteAllData,
     GetInventory(Uuid),
@@ -191,6 +199,16 @@ impl Agent for DataAgent {
                 };
 
                 self.link.respond(id, res)
+            }
+            DataAgentRequest::UpdateInventory {
+                target,
+                name,
+                owner,
+                admins,
+                writables,
+                readables,
+            } => {
+                todo!("Find the inventory to edit, and apply the changes")
             }
         }
     }

@@ -1,7 +1,7 @@
 use crate::components::{
     core::{
         create_inventory::CreateInventory, create_item::CreateItem, inventories::Inventories,
-        items::Items,
+        items::Items, update_inventory::UpdateInventory,
     },
     debug_tools::DebugTools,
     home::Home,
@@ -46,7 +46,7 @@ pub enum AppRoute {
     #[to = "/inventories/new!"]
     CreateInventory,
 
-    #[to = "/inventories/{inv_uuid}!"]
+    #[to = "/inventories/{inv_uuid}"]
     UpdateInventory(Uuid),
 
     #[to = "/inventories!"]
@@ -112,6 +112,10 @@ impl App {
                 html! { <CreateInventory /> }
             }
 
+            AppRoute::UpdateInventory(inv_uuid) => {
+                html! { <UpdateInventory inventory_uuid=inv_uuid /> }
+            }
+
             // The 404-like display
             AppRoute::PageNotFound(path) => {
                 html! {
@@ -162,9 +166,6 @@ impl App {
             }
             AppRoute::Items(inv_uuid) => {
                 html! { <Items inventory_uuid=inv_uuid /> }
-            }
-            AppRoute::UpdateInventory(inv_uuid) => {
-                html! { "still need to implement this"}
             }
         }
     }
