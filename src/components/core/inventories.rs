@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     components::{
         app::{AppRoute, AppRouterButton},
@@ -5,7 +7,7 @@ use crate::{
     },
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
-use sfi_core::{store::InventoryHandle, Inventory};
+use sfi_core::core::Inventory;
 use yew::{prelude::*, Bridge};
 
 pub enum Msg {
@@ -18,7 +20,7 @@ pub enum Msg {
 pub struct Inventories {
     link: ComponentLink<Inventories>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
-    handles: Option<Vec<InventoryHandle<'static>>>,
+    inventories: Option<Vec<Arc<Inventory>>>,
 }
 
 impl Component for Inventories {
@@ -36,7 +38,7 @@ impl Component for Inventories {
         Self {
             data_bridge,
             link,
-            handles: None,
+            inventories: None,
         }
     }
 
@@ -48,13 +50,14 @@ impl Component for Inventories {
             }
             Msg::AgentResponse(response) => match response {
                 DataAgentResponse::Inventories(state) => {
-                    self.handles = Some(state);
+                    self.inventories = Some(state);
                     true
                 }
                 DataAgentResponse::NewInventoryUuid(_uuid) => false,
 
                 // Those responses should be ignored
                 DataAgentResponse::Inventory(_) | DataAgentResponse::InvalidInventoryUuid => false,
+                DataAgentResponse::NewItemUuid(_) => todo!(),
             },
         }
     }
@@ -91,7 +94,7 @@ impl Component for Inventories {
 
 impl Inventories {
     fn view_inventories(&self) -> Html {
-        if let Some(handles) = &self.handles {
+        if let Some(handles) = &self.inventories {
             if handles.is_empty() {
                 html! { <p>{ "No accessible inventories found" }</p> }
             } else {

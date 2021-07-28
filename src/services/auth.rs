@@ -1,6 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use sfi_core::users::{StatusNotice, UserInfo, UserLogin, UserSignup};
+use sfi_core::core::users::{StatusNotice, UserInfo, UserLogin, UserSignup};
 use std::{collections::HashSet, rc::Rc};
 use yew::{
     format::{Json, Nothing},

@@ -3,10 +3,7 @@ use crate::components::login::AuthState;
 use super::auth::{AuthAgent, AuthAgentRequest};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use sfi_core::{
-    store::{InventoryHandle, ProjectionEntry, ProjectionEvent, Store},
-    Inventory, Item,
-};
+use sfi_core::core::{Inventory, Item};
 use std::{collections::HashSet, rc::Rc, sync::Arc};
 use uuid::Uuid;
 use yew::{
@@ -17,22 +14,22 @@ use yew::{
 
 const EVENT_STORE_KEY: &'static str = "sfi.events.store";
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub enum DataAgentRequest {
     GetInventories,
     MakeDebugInventory,
     CreateInventory(String),
-    CreateItem(Uuid, String, Option<String>),
+    CreateItem(Arc<Inventory>, String, Option<String>),
     DeleteAllData,
     GetInventory(Uuid),
 }
 
 #[derive(Debug)]
 pub enum DataAgentResponse {
-    Inventories(Vec<InventoryHandle<'static>>),
+    Inventories(Vec<Arc<Inventory>>),
     NewInventoryUuid(Uuid),
 
-    Inventory(Inventory),
+    Inventory(Arc<Inventory>),
     InvalidInventoryUuid,
 
     NewItemUuid(Uuid),
@@ -48,7 +45,7 @@ pub struct DataAgent {
     local_storage: StorageService,
     auth_state: Rc<AuthState>,
 
-    store: Store<'static>,
+    inventories: Vec<Arc<Inventory>>,
     auth_bridge: Box<dyn Bridge<AuthAgent>>,
 }
 
@@ -69,7 +66,7 @@ impl Agent for DataAgent {
                 store
             } else {
                 // If no such entry exists, create a new one
-                Store::new()
+                vec![]
             }
         };
 
@@ -81,7 +78,7 @@ impl Agent for DataAgent {
 
         Self {
             subscribers: HashSet::new(),
-            store,
+            inventories: store,
             local_storage,
             auth_state: Rc::new(AuthState::Initial),
             auth_bridge,
@@ -99,7 +96,7 @@ impl Agent for DataAgent {
         match msg {
             DataAgentRequest::GetInventories => {
                 // TODO remove these clones
-                let res = &self.store.to_vec();
+                let res = &self.inventories.to_vec();
 
                 for sub in self.subscribers.iter() {
                     self.link
@@ -108,11 +105,15 @@ impl Agent for DataAgent {
             }
             DataAgentRequest::MakeDebugInventory => {
                 let res = if let AuthState::LoggedIn(user_info) = self.auth_state.as_ref() {
-                    self.store
-                        .make_inventory("debug inv".to_string(), user_info.uuid)
+                    let inv = Inventory::new("debug inv".to_string(), user_info.uuid);
+                    let uuid = inv.uuid;
+                    self.inventories.push(Arc::new(inv));
+                    uuid
                 } else {
-                    self.store
-                        .make_inventory("debug inv".to_string(), Uuid::new_v4())
+                    let inv = Inventory::new("debug inv".to_string(), Uuid::new_v4());
+                    let uuid = inv.uuid;
+                    self.inventories.push(Arc::new(inv));
+                    uuid
                 };
 
                 self.persist_data();
@@ -123,32 +124,34 @@ impl Agent for DataAgent {
                 for sub in self.subscribers.iter() {
                     self.link.respond(
                         *sub,
-                        DataAgentResponse::Inventories(self.store.to_vec().clone()),
+                        DataAgentResponse::Inventories(self.inventories.to_vec().clone()),
                     )
                 }
             }
             DataAgentRequest::CreateInventory(name) => {
                 if let AuthState::LoggedIn(user_info) = self.auth_state.as_ref() {
-                    let res = self.store.make_inventory(name, user_info.uuid);
+                    let inv = Inventory::new(name, user_info.uuid);
+                    let uuid = inv.uuid;
+                    self.inventories.push(Arc::new(inv));
 
                     self.persist_data();
 
                     self.link
-                        .respond(id, DataAgentResponse::NewInventoryUuid(res));
+                        .respond(id, DataAgentResponse::NewInventoryUuid(uuid));
 
                     for sub in self.subscribers.iter() {
                         self.link.respond(
                             *sub,
-                            DataAgentResponse::Inventories(self.store.to_vec().clone()),
+                            DataAgentResponse::Inventories(self.inventories.to_vec().clone()),
                         )
                     }
                 }
             }
             DataAgentRequest::DeleteAllData => {
-                self.store = Store::new();
+                self.inventories = vec![];
                 self.persist_data();
 
-                let res = (&self.store).to_vec();
+                let res = (&self.inventories).to_vec();
 
                 for sub in self.subscribers.iter() {
                     self.link
@@ -158,35 +161,23 @@ impl Agent for DataAgent {
             DataAgentRequest::GetInventory(inv_uuid) => {
                 // TODO remove these clones
                 let res = if let Some(inventory) =
-                    self.store.iter().find(|inv| *inv.uuid() == inv_uuid)
+                    self.inventories.iter().find(|inv| inv.uuid == inv_uuid)
                 {
-                    DataAgentResponse::Inventory((**inventory).clone())
+                    DataAgentResponse::Inventory(inventory.clone())
                 } else {
                     DataAgentResponse::InvalidInventoryUuid
                 };
 
                 self.link.respond(id, res)
             }
-            DataAgentRequest::CreateItem(inventory_uuid, name, ean) => {
-                let res = if let Some(inventory) =
-                    // Try to find the desired inventory
-                    self
-                    .store
-                    .iter_mut()
-                    .find(|inv| *inv.uuid() == inventory_uuid)
-                {
-                    let create_event = Item::create(&Arc::new((**inventory).clone()), name, ean);
+            DataAgentRequest::CreateItem(inventory, name, ean) => {
+                let res = {
+                    let item = Item::new(&inventory, name, ean);
 
-                    if let ProjectionEntry::Item(item) = *create_event {
-                        let uuid = item.uuid();
-                        inventory.create_item(item);
+                    let uuid = item.uuid;
+                    inventory.items.push(item);
 
-                        DataAgentResponse::NewItemUuid(*uuid)
-                    } else {
-                        panic!("Big oof")
-                    }
-                } else {
-                    DataAgentResponse::InvalidInventoryUuid
+                    DataAgentResponse::NewItemUuid(uuid)
                 };
 
                 self.link.respond(id, res)
@@ -210,6 +201,7 @@ impl Agent for DataAgent {
 
 impl DataAgent {
     fn persist_data(&mut self) -> () {
-        self.local_storage.store(EVENT_STORE_KEY, Json(&self.store));
+        self.local_storage
+            .store(EVENT_STORE_KEY, Json(&self.inventories));
     }
 }

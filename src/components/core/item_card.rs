@@ -2,7 +2,7 @@ use crate::{
     components::app::{AppRoute, AppRouterButton},
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
-use sfi_core::Item;
+use sfi_core::core::Item;
 use yew::prelude::*;
 use yew::{prelude::*, Bridge};
 
@@ -44,15 +44,14 @@ impl Component for ItemCard {
     }
 
     fn view(&self) -> Html {
-        if let Some(inventory) = self.props.item.inventory().upgrade() {
-            let open_item_route = AppRoute::Units(*inventory.uuid(), *self.props.item.uuid());
-            let update_item_route =
-                AppRoute::UpdateItem(*inventory.uuid(), *self.props.item.uuid());
+        if let Some(inventory) = self.props.item.inventory.upgrade() {
+            let open_item_route = AppRoute::Units(inventory.uuid, self.props.item.uuid);
+            let update_item_route = AppRoute::UpdateItem(inventory.uuid, self.props.item.uuid);
 
             html! {
                 <div class="sfi-card">
-                    <h3>{ self.props.item.name() }</h3>
-                    <span class="sfi-subtitle">{ self.props.item.uuid() }</span>
+                    <h3>{ self.props.item.name }</h3>
+                    <span class="sfi-subtitle">{ self.props.item.uuid }</span>
 
                     <AppRouterButton route=open_item_route>{ "Open Item" }</AppRouterButton> { " " }
                     <AppRouterButton route=update_item_route>{ "Edit" }</AppRouterButton> { " " }
@@ -61,7 +60,7 @@ impl Component for ItemCard {
         } else {
             html! {
                 <div class="sfi-card">
-                    <h3>{ self.props.item.name() }</h3>
+                    <h3>{ self.props.item.name }</h3>
                     <span class="sfi-subtitle">{ "Couldn't find parent inventory" }</span>
                 </div>
             }

@@ -2,7 +2,7 @@ use crate::{
     components::app::{AppRoute, AppRouterButton},
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
-use sfi_core::{store::InventoryHandle, Inventory};
+use sfi_core::core::Inventory;
 use yew::prelude::*;
 use yew::{prelude::*, Bridge};
 
@@ -51,11 +51,11 @@ impl Component for InventoryCard {
     fn view(&self) -> Html {
         html! {
             <div class="sfi-card">
-                <h3>{ self.props.inventory.name() }</h3>
-                <span class="sfi-subtitle">{ self.props.inventory.uuid() }</span>
+                <h3>{ self.props.inventory.name }</h3>
+                <span class="sfi-subtitle">{ self.props.inventory.uuid }</span>
 
-                <AppRouterButton route=AppRoute::Items(self.props.inventory.uuid().clone())>{ "Open inventory" }</AppRouterButton> { " " }
-                <AppRouterButton route=AppRoute::UpdateInventory(self.props.inventory.uuid().clone())>{ "Edit" }</AppRouterButton> { " " }
+                <AppRouterButton route=AppRoute::Items(self.props.inventory.uuid)>{ "Open inventory" }</AppRouterButton> { " " }
+                <AppRouterButton route=AppRoute::UpdateInventory(self.props.inventory.uuid)>{ "Edit" }</AppRouterButton> { " " }
                 <button disabled=true onclick=self.link.callback(|_| Msg::ExportInventory)>{ "Export" }</button> { " " }
             </div>
         }

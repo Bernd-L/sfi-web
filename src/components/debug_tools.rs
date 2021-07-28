@@ -52,7 +52,7 @@ impl Component for DebugTools {
                         }
 
                         for inventory in inventories {
-                            log::debug!("{}\n{:#?}", inventory.name(), inventory);
+                            log::debug!("{}\n{:#?}", inventory.name, inventory);
                         }
                     }
                 }

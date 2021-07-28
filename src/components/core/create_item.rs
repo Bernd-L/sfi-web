@@ -1,4 +1,6 @@
-use sfi_core::{Inventory, Item};
+use std::sync::Arc;
+
+use sfi_core::core::Inventory;
 use uuid::Uuid;
 use yew::prelude::*;
 use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
@@ -11,7 +13,7 @@ use crate::{
 pub struct CreateItem {
     link: ComponentLink<Self>,
     name: String,
-    inventory: Option<Inventory>,
+    inventory: Option<Arc<Inventory>>,
     inventory_uuid: Uuid,
 
     ean: Option<String>,
@@ -64,7 +66,7 @@ impl Component for CreateItem {
             Msg::Confirm => {
                 // Give the new card to the listing component
                 self.data_bridge.send(DataAgentRequest::CreateItem(
-                    self.inventory_uuid,
+                    self.inventory.expect("Not available with None").clone(),
                     self.name.clone(),
                     self.ean.clone(),
                 ));
@@ -90,6 +92,7 @@ impl Component for CreateItem {
                     true
                 }
                 DataAgentResponse::Inventories(_) | DataAgentResponse::NewInventoryUuid(_) => false,
+                DataAgentResponse::NewItemUuid(_) => todo!(),
             },
         }
     }
@@ -108,7 +111,7 @@ impl Component for CreateItem {
         html! {
             <div>
                 // A heading
-                <h2>{ "Create a new item in " } {inventory.name()}</h2>
+                <h2>{ "Create a new item in " } {inventory.name}</h2>
 
                 // The name input
                 <input

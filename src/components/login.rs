@@ -1,5 +1,5 @@
 use crate::services::auth::{AuthAgent, AuthAgentRequest};
-use sfi_core::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
+use sfi_core::core::users::{UserIdentifier, UserInfo, UserLogin, UserSignup};
 use std::rc::Rc;
 use yew::{prelude::*, services::fetch::FetchTask};
 

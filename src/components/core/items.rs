@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     components::{
         app::{AppRoute, AppRouterButton},
@@ -5,14 +7,14 @@ use crate::{
     },
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
-use sfi_core::{Inventory, Item};
+use sfi_core::core::{Inventory, Item};
 use uuid::Uuid;
 use yew::prelude::*;
 
 pub struct Items {
     link: ComponentLink<Self>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
-    inventory: Option<Inventory>,
+    inventory: Option<Arc<Inventory>>,
     inventory_uuid: Uuid,
 }
 
@@ -63,6 +65,7 @@ impl Component for Items {
 
                 // Those responses should be ignored
                 DataAgentResponse::Inventories(_) | DataAgentResponse::NewInventoryUuid(_) => false,
+                DataAgentResponse::NewItemUuid(_) => todo!(),
             },
         }
     }
@@ -81,7 +84,7 @@ impl Component for Items {
         html! {
             <>
 
-            <h1>{ "Items of " } {inventory.name()}</h1>
+            <h1>{ "Items of " } {inventory.name}</h1>
 
             <button onclick=self.link.callback(|_| Msg::RequestNewState)>
                 { "Refresh items" }
@@ -107,7 +110,7 @@ impl Component for Items {
 impl Items {
     fn view_items(&self) -> Html {
         let items = if let Some(inventory) = &self.inventory {
-            inventory.items()
+            inventory.items
         } else {
             return html! {};
         };
