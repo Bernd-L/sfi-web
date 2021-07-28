@@ -185,6 +185,8 @@ impl Agent for DataAgent {
                         .items
                         .push(item);
 
+                    self.persist_data();
+
                     DataAgentResponse::NewItemUuid(uuid)
                 };
 
