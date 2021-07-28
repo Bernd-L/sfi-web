@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use crate::{
     components::{
@@ -14,7 +14,7 @@ use yew::prelude::*;
 pub struct Items {
     link: ComponentLink<Self>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
-    inventory: Option<Arc<Inventory>>,
+    inventory: Option<Arc<RwLock<Inventory>>>,
     inventory_uuid: Uuid,
 }
 
@@ -76,7 +76,7 @@ impl Component for Items {
 
     fn view(&self) -> Html {
         let inventory = if let Some(inventory) = &self.inventory {
-            inventory
+            inventory.read().expect("Cannot read inventory")
         } else {
             return html! { <p>{ "Cannot find this inventory" }</p> };
         };
@@ -84,7 +84,7 @@ impl Component for Items {
         html! {
             <>
 
-            <h1>{ "Items of " } {inventory.name}</h1>
+            <h1>{ "Items of " } {inventory.name.clone()}</h1>
 
             <button onclick=self.link.callback(|_| Msg::RequestNewState)>
                 { "Refresh items" }
@@ -110,7 +110,11 @@ impl Component for Items {
 impl Items {
     fn view_items(&self) -> Html {
         let items = if let Some(inventory) = &self.inventory {
-            inventory.items
+            inventory
+                .read()
+                .expect("Cannot read inventory")
+                .items
+                .to_owned()
         } else {
             return html! {};
         };

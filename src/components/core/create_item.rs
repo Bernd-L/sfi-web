@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use sfi_core::core::Inventory;
 use uuid::Uuid;
@@ -13,7 +13,7 @@ use crate::{
 pub struct CreateItem {
     link: ComponentLink<Self>,
     name: String,
-    inventory: Option<Arc<Inventory>>,
+    inventory: Option<Arc<RwLock<Inventory>>>,
     inventory_uuid: Uuid,
 
     ean: Option<String>,
@@ -66,7 +66,7 @@ impl Component for CreateItem {
             Msg::Confirm => {
                 // Give the new card to the listing component
                 self.data_bridge.send(DataAgentRequest::CreateItem(
-                    self.inventory.expect("Not available with None").clone(),
+                    self.inventory_uuid,
                     self.name.clone(),
                     self.ean.clone(),
                 ));
@@ -103,7 +103,7 @@ impl Component for CreateItem {
 
     fn view(&self) -> Html {
         let inventory = if let Some(inventory) = &self.inventory {
-            inventory
+            inventory.read().expect("Cannot read inventory")
         } else {
             return html! { <p>{ "Cannot find this inventory" }</p> };
         };
@@ -111,7 +111,7 @@ impl Component for CreateItem {
         html! {
             <div>
                 // A heading
-                <h2>{ "Create a new item in " } {inventory.name}</h2>
+                <h2>{ "Create a new item in " } {inventory.name.clone()}</h2>
 
                 // The name input
                 <input

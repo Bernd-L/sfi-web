@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use crate::{
     components::{
@@ -20,7 +20,7 @@ pub enum Msg {
 pub struct Inventories {
     link: ComponentLink<Inventories>,
     data_bridge: Box<dyn Bridge<DataAgent>>,
-    inventories: Option<Vec<Arc<Inventory>>>,
+    inventories: Option<Vec<Arc<RwLock<Inventory>>>>,
 }
 
 impl Component for Inventories {
@@ -49,8 +49,8 @@ impl Component for Inventories {
                 false
             }
             Msg::AgentResponse(response) => match response {
-                DataAgentResponse::Inventories(state) => {
-                    self.inventories = Some(state);
+                DataAgentResponse::Inventories(inventories) => {
+                    self.inventories = Some(inventories);
                     true
                 }
                 DataAgentResponse::NewInventoryUuid(_uuid) => false,
@@ -108,7 +108,8 @@ impl Inventories {
         }
     }
 
-    fn view_inventory(inventory: &Inventory) -> Html {
+    fn view_inventory(inventory: &Arc<RwLock<Inventory>>) -> Html {
+        let inventory = inventory.read().expect("Cannot read inventory").to_owned();
         html! { <InventoryCard inventory=inventory /> }
     }
 }

@@ -51,7 +51,7 @@ impl Component for InventoryCard {
     fn view(&self) -> Html {
         html! {
             <div class="sfi-card">
-                <h3>{ self.props.inventory.name }</h3>
+                <h3>{ self.props.inventory.name.clone() }</h3>
                 <span class="sfi-subtitle">{ self.props.inventory.uuid }</span>
 
                 <AppRouterButton route=AppRoute::Items(self.props.inventory.uuid)>{ "Open inventory" }</AppRouterButton> { " " }

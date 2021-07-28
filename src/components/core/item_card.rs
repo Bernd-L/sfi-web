@@ -44,26 +44,18 @@ impl Component for ItemCard {
     }
 
     fn view(&self) -> Html {
-        if let Some(inventory) = self.props.item.inventory.upgrade() {
-            let open_item_route = AppRoute::Units(inventory.uuid, self.props.item.uuid);
-            let update_item_route = AppRoute::UpdateItem(inventory.uuid, self.props.item.uuid);
+        let inventory_uuid = self.props.item.inventory_uuid;
+        let open_item_route = AppRoute::Units(inventory_uuid, self.props.item.uuid);
+        let update_item_route = AppRoute::UpdateItem(inventory_uuid, self.props.item.uuid);
 
-            html! {
-                <div class="sfi-card">
-                    <h3>{ self.props.item.name }</h3>
-                    <span class="sfi-subtitle">{ self.props.item.uuid }</span>
+        html! {
+            <div class="sfi-card">
+                <h3>{ self.props.item.name.clone() }</h3>
+                <span class="sfi-subtitle">{ self.props.item.uuid }</span>
 
-                    <AppRouterButton route=open_item_route>{ "Open Item" }</AppRouterButton> { " " }
-                    <AppRouterButton route=update_item_route>{ "Edit" }</AppRouterButton> { " " }
-                </div>
-            }
-        } else {
-            html! {
-                <div class="sfi-card">
-                    <h3>{ self.props.item.name }</h3>
-                    <span class="sfi-subtitle">{ "Couldn't find parent inventory" }</span>
-                </div>
-            }
+                <AppRouterButton route=open_item_route>{ "Open Item" }</AppRouterButton> { " " }
+                <AppRouterButton route=update_item_route>{ "Edit" }</AppRouterButton> { " " }
+            </div>
         }
     }
 }
