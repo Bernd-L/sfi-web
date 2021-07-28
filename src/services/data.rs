@@ -31,9 +31,15 @@ pub enum DataAgentRequest {
         writables: Vec<Uuid>,
         readables: Vec<Uuid>,
     },
+    UpdateItem {
+        target: Arc<RwLock<Item>>,
+        name: String,
+        ean: Option<String>,
+    },
     CreateItem(Uuid, String, Option<String>),
     DeleteAllData,
     GetInventory(Uuid),
+    GetItem(Uuid, Uuid),
 }
 
 #[derive(Debug)]
@@ -46,6 +52,8 @@ pub enum DataAgentResponse {
     UpdatedInventory(Arc<RwLock<Inventory>>),
 
     NewItemUuid(Uuid),
+    Item(Arc<RwLock<Item>>),
+    UpdatedItem,
 }
 
 pub enum Msg {
@@ -173,7 +181,6 @@ impl Agent for DataAgent {
                 }
             }
             DataAgentRequest::GetInventory(inv_uuid) => {
-                // TODO remove these clones
                 let res = if let Some(inventory) = self.find_inv(inv_uuid) {
                     DataAgentResponse::Inventory(inventory.clone())
                 } else {
@@ -192,7 +199,7 @@ impl Agent for DataAgent {
                         .write()
                         .expect("Cannot write inventory")
                         .items
-                        .push(item);
+                        .push(Arc::new(RwLock::new(item)));
 
                     self.persist_data();
 
@@ -227,6 +234,50 @@ impl Agent for DataAgent {
 
                 self.link.respond(id, res);
             }
+            DataAgentRequest::GetItem(inventory_uuid, item_uuid) => {
+                // let res = if let Some(item) = crate::find_item!(inventory_uuid, item_uuid) {
+                //     DataAgentResponse::Item(item.clone())
+                // } else {
+                //     DataAgentResponse::InvalidInventoryUuid
+                // };
+
+                let res = if let Some(item) = {
+                    self.inventories
+                        .iter()
+                        .find(|inv| {
+                            inv.read().expect("Cannot read inventory uuid").uuid == inventory_uuid
+                        })
+                        .expect("No such item")
+                        .read()
+                        .expect("Cannot read inventory")
+                        .items
+                        .iter()
+                        .find(|item| item.read().expect("Cannot read item").uuid == item_uuid)
+                } {
+                    DataAgentResponse::Item(item.clone())
+                } else {
+                    DataAgentResponse::InvalidInventoryUuid
+                };
+
+                self.link.respond(id, res)
+            }
+            DataAgentRequest::UpdateItem { target, name, ean } => {
+                let res = if let Ok(mut item) = target.write() {
+                    item.name = name;
+                    item.ean = ean;
+
+                    drop(item);
+
+                    self.persist_data();
+
+                    DataAgentResponse::UpdatedItem
+                } else {
+                    // TODO Maybe replace this with InvalidItemUuid or something; notice: the error could still be the inventory UUID
+                    DataAgentResponse::InvalidInventoryUuid
+                };
+
+                self.link.respond(id, res);
+            }
         }
     }
 
@@ -255,4 +306,23 @@ impl DataAgent {
             .iter()
             .find(|inv| inv.read().expect("Cannot read inventory uuid").uuid == inv_uuid)
     }
+
+    // fn find_item(&mut self, inventory_uuid: Uuid, item_uuid: Uuid) -> Option<&Arc<RwLock<Item>>> {}
 }
+
+// #[macro_export]
+// macro_rules! find_item {
+//     ($inventory_uuid:ident,$item_uuid: ident) => {{
+//         let inv = self
+//             .inventories
+//             .iter()
+//             .find(|inv| inv.read().expect("Cannot read inventory uuid").uuid == inventory_uuid)
+//             .expect("No such item")
+//             .read()
+//             .expect("Cannot read inventory");
+
+//         inv.items
+//             .iter()
+//             .find(|item| item.read().expect("Cannot read item").uuid == item_uuid)
+//     }};
+// }

@@ -112,6 +112,8 @@ impl Component for UpdateInventory {
                 DataAgentResponse::Inventories(_)
                 | DataAgentResponse::NewInventoryUuid(_)
                 | DataAgentResponse::InvalidInventoryUuid
+                | DataAgentResponse::UpdatedItem
+                | DataAgentResponse::Item(_)
                 | DataAgentResponse::NewItemUuid(_) => false,
             },
         }

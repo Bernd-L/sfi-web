@@ -66,6 +66,8 @@ impl Component for Items {
                 // These responses should be ignored
                 DataAgentResponse::Inventories(_)
                 | DataAgentResponse::NewInventoryUuid(_)
+                | DataAgentResponse::Item(_)
+                | DataAgentResponse::UpdatedItem
                 | DataAgentResponse::NewItemUuid(_)
                 | DataAgentResponse::UpdatedInventory(_) => false,
             },
@@ -128,7 +130,8 @@ impl Items {
         }
     }
 
-    fn view_item(item: &Item) -> Html {
+    fn view_item(item: &Arc<RwLock<Item>>) -> Html {
+        let item = item.read().expect("Cannot read item").to_owned();
         html! { <ItemCard item=item /> }
     }
 }

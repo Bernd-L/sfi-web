@@ -1,7 +1,7 @@
 use crate::components::{
     core::{
         create_inventory::CreateInventory, create_item::CreateItem, inventories::Inventories,
-        items::Items, update_inventory::UpdateInventory,
+        items::Items, update_inventory::UpdateInventory, update_item::UpdateItem,
     },
     debug_tools::DebugTools,
     home::Home,
@@ -28,7 +28,7 @@ pub enum AppRoute {
     #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/new!"]
     CreateUnit(Uuid, Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/{un_uuid}!"]
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units/{un_uuid}"]
     UpdateUnit(Uuid, Uuid, Uuid),
 
     #[to = "/inventories/{inv_uuid}/items/{it_uuid}/units!"]
@@ -37,7 +37,7 @@ pub enum AppRoute {
     #[to = "/inventories/{inv_uuid}/items/new!"]
     CreateItem(Uuid),
 
-    #[to = "/inventories/{inv_uuid}/items/{it_uuid}!"]
+    #[to = "/inventories/{inv_uuid}/items/{it_uuid}"]
     UpdateItem(Uuid, Uuid),
 
     #[to = "/inventories/{inv_uuid}/items!"]
@@ -116,6 +116,10 @@ impl App {
                 html! { <UpdateInventory inventory_uuid=inv_uuid /> }
             }
 
+            AppRoute::UpdateItem(inv_uuid, it_uuid) => {
+                html! { <UpdateItem inventory_uuid=inv_uuid item_uuid=it_uuid /> }
+            }
+
             // The 404-like display
             AppRoute::PageNotFound(path) => {
                 html! {
@@ -160,9 +164,6 @@ impl App {
             }
             AppRoute::CreateItem(inv_uuid) => {
                 html! { <CreateItem inventory_uuid=inv_uuid /> }
-            }
-            AppRoute::UpdateItem(inv_uuid, it_uuid) => {
-                html! { "still need to implement this"}
             }
             AppRoute::Items(inv_uuid) => {
                 html! { <Items inventory_uuid=inv_uuid /> }

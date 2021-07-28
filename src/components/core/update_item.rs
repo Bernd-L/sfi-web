@@ -1,6 +1,6 @@
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::sync::{Arc, RwLock};
 
-use sfi_core::core::Inventory;
+use sfi_core::core::{Inventory, Item};
 use uuid::Uuid;
 use yew::prelude::*;
 use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
@@ -10,16 +10,16 @@ use crate::{
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
 
-pub struct CreateItem {
+pub struct UpdateItem {
     link: ComponentLink<Self>,
-    name: String,
-    inventory: Option<Arc<RwLock<Inventory>>>,
-    inventory_uuid: Uuid,
-
-    ean: Option<String>,
+    props: Props,
+    item: Option<Arc<RwLock<Item>>>,
+    old_name: String,
     data_bridge: Box<dyn Bridge<DataAgent>>,
     route_dispatcher: RouteAgentDispatcher,
     is_busy: bool,
+
+    form_data: FormData,
 }
 
 pub enum Msg {
@@ -32,78 +32,88 @@ pub enum Msg {
 #[derive(Clone, Properties)]
 pub struct Props {
     pub inventory_uuid: Uuid,
+    pub item_uuid: Uuid,
 }
 
-impl Component for CreateItem {
+impl Component for UpdateItem {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let inventory_uuid = props.inventory_uuid;
+        let item_uuid = props.item_uuid;
 
         let mut data_bridge = DataAgent::bridge(link.callback(Msg::DataAgentResponse));
-        data_bridge.send(DataAgentRequest::GetInventory(inventory_uuid));
+        data_bridge.send(DataAgentRequest::GetItem(inventory_uuid, item_uuid));
 
         Self {
             data_bridge,
             route_dispatcher: RouteAgentDispatcher::new(),
-            name: String::new(),
+            form_data: FormData::default(),
             is_busy: false,
-            ean: None,
             link,
-            inventory: None,
-            inventory_uuid,
+            item: None,
+            old_name: String::default(),
+            props,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            // TODO handle EAN
             Msg::UpdateName(name) => {
-                self.name = name;
-                false
+                self.form_data.name = name;
+                true
             }
             Msg::Confirm => {
                 // Give the new card to the listing component
-                self.data_bridge.send(DataAgentRequest::CreateItem(
-                    self.inventory_uuid,
-                    self.name.clone(),
-                    self.ean.clone(),
-                ));
+                self.data_bridge.send(DataAgentRequest::UpdateItem {
+                    target: self.item.clone().expect("Cannot be none"),
+                    name: self.form_data.name.clone(),
+                    ean: self.form_data.ean.clone(),
+                });
 
                 self.is_busy = true;
                 true
             }
             Msg::Cancel => {
-                // Cancel the creation of the inventory
+                // Cancel the update of the item
                 self.route_dispatcher
                     .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
 
                 self.is_busy = true;
                 true
             }
-            Msg::DataAgentResponse(response) => match response {
-                DataAgentResponse::Inventory(inventory) => {
-                    self.inventory = Some(inventory);
+            Msg::DataAgentResponse(res) => match res {
+                DataAgentResponse::Item(item) => {
+                    {
+                        let item = item.read().expect("Cannot read item");
+                        self.old_name = item.name.clone();
+
+                        self.form_data = FormData {
+                            name: item.name.clone(),
+                            ean: item.ean.clone(),
+                        };
+                    }
+                    self.item = Some(item);
                     true
                 }
-                DataAgentResponse::InvalidInventoryUuid => {
-                    self.inventory = None;
-                    true
-                }
-                DataAgentResponse::NewItemUuid(_) => {
+                DataAgentResponse::UpdatedItem => {
+                    // Navigate back to the inventories
                     self.route_dispatcher.send(RouteRequest::ChangeRoute(
-                        AppRoute::Items(self.inventory_uuid).into(),
+                        AppRoute::Items(self.props.inventory_uuid).into(),
                     ));
 
                     self.is_busy = false;
                     true
                 }
+
+                // These responses should be ignored
                 DataAgentResponse::Inventories(_)
                 | DataAgentResponse::NewInventoryUuid(_)
-                | DataAgentResponse::UpdatedItem
-                | DataAgentResponse::Item(_)
-                | DataAgentResponse::UpdatedInventory(_) => false,
+                | DataAgentResponse::InvalidInventoryUuid
+                | DataAgentResponse::UpdatedInventory(_)
+                | DataAgentResponse::Inventory(_)
+                | DataAgentResponse::NewItemUuid(_) => false,
             },
         }
     }
@@ -113,23 +123,23 @@ impl Component for CreateItem {
     }
 
     fn view(&self) -> Html {
-        let inventory = if let Some(inventory) = &self.inventory {
-            inventory.read().expect("Cannot read inventory")
+        let item = if let Some(item) = &self.item {
+            item.read().expect("Cannot read item")
         } else {
-            return html! { <p>{ "Cannot find this inventory" }</p> };
+            return html! { <p>{ "Cannot find this item" }</p> };
         };
 
         html! {
             <div>
                 // A heading
-                <h2>{ "Create a new item in " } {inventory.name.clone()}</h2>
+                <h2>{ "Edit item " } {item.name.clone()}</h2>
 
                 // The name input
                 <input
                     type="text"
                     placeholder="name"
                     disabled=self.is_busy
-                    value={self.name.to_owned()}
+                    value={self.form_data.name.to_owned()}
                     oninput=self.link.callback(|i: InputData| Msg::UpdateName(i.value))
                 /> { " " }
 
@@ -149,7 +159,15 @@ impl Component for CreateItem {
                     { "Cancel" }
                 </button>
 
+                // TODO implement edit options for owner,
+
             </div>
         }
     }
+}
+
+#[derive(Default)]
+struct FormData {
+    name: String,
+    ean: Option<String>,
 }

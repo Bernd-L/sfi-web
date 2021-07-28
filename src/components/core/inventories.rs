@@ -58,6 +58,8 @@ impl Component for Inventories {
                 // These responses should be ignored
                 DataAgentResponse::Inventory(_)
                 | DataAgentResponse::InvalidInventoryUuid
+                | DataAgentResponse::Item(_)
+                | DataAgentResponse::UpdatedItem
                 | DataAgentResponse::NewItemUuid(_)
                 | DataAgentResponse::UpdatedInventory(_) => false,
             },
