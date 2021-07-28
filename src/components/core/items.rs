@@ -63,9 +63,11 @@ impl Component for Items {
                     true
                 }
 
-                // Those responses should be ignored
-                DataAgentResponse::Inventories(_) | DataAgentResponse::NewInventoryUuid(_) => false,
-                DataAgentResponse::NewItemUuid(_) => todo!(),
+                // These responses should be ignored
+                DataAgentResponse::Inventories(_)
+                | DataAgentResponse::NewInventoryUuid(_)
+                | DataAgentResponse::NewItemUuid(_)
+                | DataAgentResponse::UpdatedInventory(_) => false,
             },
         }
     }

@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::sync::{Arc, RwLock};
 
 use sfi_core::core::Inventory;
 use uuid::Uuid;
@@ -10,16 +10,15 @@ use crate::{
     services::data::{DataAgent, DataAgentRequest, DataAgentResponse},
 };
 
-pub struct CreateItem {
+pub struct UpdateInventory {
     link: ComponentLink<Self>,
-    name: String,
     inventory: Option<Arc<RwLock<Inventory>>>,
-    inventory_uuid: Uuid,
-
-    ean: Option<String>,
+    old_name: String,
     data_bridge: Box<dyn Bridge<DataAgent>>,
     route_dispatcher: RouteAgentDispatcher,
     is_busy: bool,
+
+    form_data: FormData,
 }
 
 pub enum Msg {
@@ -34,7 +33,7 @@ pub struct Props {
     pub inventory_uuid: Uuid,
 }
 
-impl Component for CreateItem {
+impl Component for UpdateInventory {
     type Message = Msg;
     type Properties = Props;
 
@@ -47,29 +46,30 @@ impl Component for CreateItem {
         Self {
             data_bridge,
             route_dispatcher: RouteAgentDispatcher::new(),
-            name: String::new(),
+            form_data: FormData::default(),
             is_busy: false,
-            ean: None,
             link,
             inventory: None,
-            inventory_uuid,
+            old_name: String::default(),
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            // TODO handle EAN
             Msg::UpdateName(name) => {
-                self.name = name;
-                false
+                self.form_data.name = name;
+                true
             }
             Msg::Confirm => {
                 // Give the new card to the listing component
-                self.data_bridge.send(DataAgentRequest::CreateItem(
-                    self.inventory_uuid,
-                    self.name.clone(),
-                    self.ean.clone(),
-                ));
+                self.data_bridge.send(DataAgentRequest::UpdateInventory {
+                    target: self.inventory.clone().expect("Cannot be none"),
+                    name: self.form_data.name.clone(),
+                    owner: self.form_data.owner.clone(),
+                    admins: self.form_data.admins.clone(),
+                    writables: self.form_data.writables.clone(),
+                    readables: self.form_data.readables.clone(),
+                });
 
                 self.is_busy = true;
                 true
@@ -82,25 +82,37 @@ impl Component for CreateItem {
                 self.is_busy = true;
                 true
             }
-            Msg::DataAgentResponse(response) => match response {
+            Msg::DataAgentResponse(res) => match res {
                 DataAgentResponse::Inventory(inventory) => {
+                    {
+                        let inventory = inventory.read().expect("Cannot read inventory");
+                        self.old_name = inventory.name.clone();
+
+                        self.form_data = FormData {
+                            name: inventory.name.clone(),
+                            owner: inventory.owner.clone(),
+                            admins: inventory.admins.clone(),
+                            writables: inventory.writables.clone(),
+                            readables: inventory.readables.clone(),
+                        };
+                    }
                     self.inventory = Some(inventory);
                     true
                 }
-                DataAgentResponse::InvalidInventoryUuid => {
-                    self.inventory = None;
-                    true
-                }
-                DataAgentResponse::Inventories(_) | DataAgentResponse::NewInventoryUuid(_) => false,
-                DataAgentResponse::NewItemUuid(_) => {
-                    self.route_dispatcher.send(RouteRequest::ChangeRoute(
-                        AppRoute::Items(self.inventory_uuid).into(),
-                    ));
+                DataAgentResponse::UpdatedInventory(_) => {
+                    // Navigate back to the inventories
+                    self.route_dispatcher
+                        .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
 
                     self.is_busy = false;
                     true
                 }
-                DataAgentResponse::UpdatedInventory(_) => false,
+
+                // These responses should be ignored
+                DataAgentResponse::Inventories(_)
+                | DataAgentResponse::NewInventoryUuid(_)
+                | DataAgentResponse::InvalidInventoryUuid
+                | DataAgentResponse::NewItemUuid(_) => false,
             },
         }
     }
@@ -119,14 +131,14 @@ impl Component for CreateItem {
         html! {
             <div>
                 // A heading
-                <h2>{ "Create a new item in " } {inventory.name.clone()}</h2>
+                <h2>{ "Edit inventory " } {inventory.name.clone()}</h2>
 
                 // The name input
                 <input
                     type="text"
                     placeholder="name"
                     disabled=self.is_busy
-                    value={self.name.to_owned()}
+                    value={self.form_data.name.to_owned()}
                     oninput=self.link.callback(|i: InputData| Msg::UpdateName(i.value))
                 /> { " " }
 
@@ -146,7 +158,18 @@ impl Component for CreateItem {
                     { "Cancel" }
                 </button>
 
+                // TODO implement edit options for owner,
+
             </div>
         }
     }
+}
+
+#[derive(Default)]
+struct FormData {
+    name: String,
+    owner: Uuid,
+    admins: Vec<Uuid>,
+    writables: Vec<Uuid>,
+    readables: Vec<Uuid>,
 }

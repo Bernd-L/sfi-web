@@ -43,6 +43,7 @@ pub enum DataAgentResponse {
 
     Inventory(Arc<RwLock<Inventory>>),
     InvalidInventoryUuid,
+    UpdatedInventory(Arc<RwLock<Inventory>>),
 
     NewItemUuid(Uuid),
 }
@@ -208,7 +209,24 @@ impl Agent for DataAgent {
                 writables,
                 readables,
             } => {
-                todo!("Find the inventory to edit, and apply the changes")
+                let res = if let Ok(mut inventory) = target.write() {
+                    inventory.name = name;
+                    inventory.owner = owner;
+                    inventory.admins = admins;
+                    inventory.writables = writables;
+                    inventory.readables = readables;
+
+                    // TODO Uncomment the following line and fix `unreachable` runtime error
+                    // self.persist_data();
+
+                    drop(inventory);
+
+                    DataAgentResponse::UpdatedInventory(target.clone())
+                } else {
+                    DataAgentResponse::InvalidInventoryUuid
+                };
+
+                self.link.respond(id, res);
             }
         }
     }
