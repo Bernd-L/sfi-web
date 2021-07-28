@@ -92,7 +92,14 @@ impl Component for CreateItem {
                     true
                 }
                 DataAgentResponse::Inventories(_) | DataAgentResponse::NewInventoryUuid(_) => false,
-                DataAgentResponse::NewItemUuid(_) => todo!(),
+                DataAgentResponse::NewItemUuid(_) => {
+                    self.route_dispatcher.send(RouteRequest::ChangeRoute(
+                        AppRoute::Items(self.inventory_uuid).into(),
+                    ));
+
+                    self.is_busy = false;
+                    true
+                }
             },
         }
     }
