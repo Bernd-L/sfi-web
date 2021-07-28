@@ -24,6 +24,7 @@ pub struct CreateItem {
 
 pub enum Msg {
     UpdateName(String),
+    UpdateEan(String),
     DataAgentResponse(DataAgentResponse),
     Confirm,
     Cancel,
@@ -58,10 +59,13 @@ impl Component for CreateItem {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            // TODO handle EAN
             Msg::UpdateName(name) => {
                 self.name = name;
                 false
+            }
+            Msg::UpdateEan(ean) => {
+                self.ean = if ean.is_empty() { None } else { Some(ean) };
+                true
             }
             Msg::Confirm => {
                 // Give the new card to the listing component
@@ -75,7 +79,7 @@ impl Component for CreateItem {
                 true
             }
             Msg::Cancel => {
-                // Cancel the creation of the inventory
+                // Cancel the creation of the item
                 self.route_dispatcher
                     .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
 
@@ -131,6 +135,15 @@ impl Component for CreateItem {
                     disabled=self.is_busy
                     value={self.name.to_owned()}
                     oninput=self.link.callback(|i: InputData| Msg::UpdateName(i.value))
+                /> { " " }
+
+                // The EAN input
+                <input
+                    type="text"
+                    placeholder="EAN"
+                    disabled=self.is_busy
+                    value={self.ean.clone().unwrap_or(String::default())}
+                    oninput=self.link.callback(|i: InputData| Msg::UpdateEan(i.value))
                 /> { " " }
 
                 // Save edits button
