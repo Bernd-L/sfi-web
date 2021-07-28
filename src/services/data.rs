@@ -216,10 +216,9 @@ impl Agent for DataAgent {
                     inventory.writables = writables;
                     inventory.readables = readables;
 
-                    // TODO Uncomment the following line and fix `unreachable` runtime error
-                    // self.persist_data();
-
                     drop(inventory);
+
+                    self.persist_data();
 
                     DataAgentResponse::UpdatedInventory(target.clone())
                 } else {
