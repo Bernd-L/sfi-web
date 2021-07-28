@@ -24,6 +24,7 @@ pub struct UpdateItem {
 
 pub enum Msg {
     UpdateName(String),
+    UpdateEan(String),
     DataAgentResponse(DataAgentResponse),
     Confirm,
     Cancel,
@@ -62,6 +63,10 @@ impl Component for UpdateItem {
         match msg {
             Msg::UpdateName(name) => {
                 self.form_data.name = name;
+                true
+            }
+            Msg::UpdateEan(ean) => {
+                self.form_data.ean = if ean.is_empty() { None } else { Some(ean) };
                 true
             }
             Msg::Confirm => {
@@ -141,6 +146,15 @@ impl Component for UpdateItem {
                     disabled=self.is_busy
                     value={self.form_data.name.to_owned()}
                     oninput=self.link.callback(|i: InputData| Msg::UpdateName(i.value))
+                /> { " " }
+
+                // The EAN input
+                <input
+                    type="text"
+                    placeholder="EAN"
+                    disabled=self.is_busy
+                    value={self.form_data.ean.clone().unwrap_or(String::default())}
+                    oninput=self.link.callback(|i: InputData| Msg::UpdateEan(i.value))
                 /> { " " }
 
                 // Save edits button
