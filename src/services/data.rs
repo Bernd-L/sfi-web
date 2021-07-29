@@ -17,6 +17,7 @@ use yew::{
 };
 
 const EVENT_STORE_KEY: &'static str = "sfi.events.store";
+const SIMPLE_STORE_KEY: &'static str = "sfi.simple_data.store";
 
 #[derive(Debug)]
 pub enum DataAgentRequest {
@@ -82,7 +83,7 @@ impl Agent for DataAgent {
 
         // Load the event store from localStorage
         let store = {
-            if let Json(Ok(store)) = local_storage.restore(EVENT_STORE_KEY) {
+            if let Json(Ok(store)) = local_storage.restore(SIMPLE_STORE_KEY) {
                 // Load the event store from localStorage
                 store
             } else {
@@ -298,7 +299,7 @@ impl Agent for DataAgent {
 impl DataAgent {
     fn persist_data(&mut self) -> () {
         self.local_storage
-            .store(EVENT_STORE_KEY, Json(&self.inventories));
+            .store(SIMPLE_STORE_KEY, Json(&self.inventories));
     }
 
     fn find_inv(&mut self, inv_uuid: Uuid) -> Option<&Arc<RwLock<Inventory>>> {
