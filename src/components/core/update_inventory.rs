@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use sfi_core::core::Inventory;
 use uuid::Uuid;
-use yew::prelude::*;
+use yew::{prelude::*, services::DialogService};
 use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
 
 use crate::{
@@ -26,6 +26,7 @@ pub enum Msg {
     DataAgentResponse(DataAgentResponse),
     Confirm,
     Cancel,
+    Delete,
 }
 
 #[derive(Clone, Properties)]
@@ -82,6 +83,20 @@ impl Component for UpdateInventory {
                 self.is_busy = true;
                 true
             }
+            Msg::Delete => {
+                let should_kaboom = DialogService::confirm(&format!(
+                    "Delete inventory \"{}\"?\nThis operation cannot be undone.",
+                    self.old_name
+                ));
+
+                if should_kaboom {
+                    self.data_bridge.send(DataAgentRequest::DeleteInventory(
+                        self.inventory.clone().expect("Must be Some"),
+                    ))
+                }
+
+                should_kaboom
+            }
             Msg::DataAgentResponse(res) => match res {
                 DataAgentResponse::Inventory(inventory) => {
                     {
@@ -105,6 +120,13 @@ impl Component for UpdateInventory {
                         .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
 
                     self.is_busy = false;
+                    true
+                }
+                DataAgentResponse::DeletedInventory(_) => {
+                    self.route_dispatcher
+                        .send(RouteRequest::ChangeRoute(AppRoute::Inventories.into()));
+
+                    self.is_busy = true;
                     true
                 }
 
@@ -158,6 +180,14 @@ impl Component for UpdateInventory {
                     disabled=self.is_busy
                 >
                     { "Cancel" }
+                </button>  { " " }
+
+                // Delete button
+                <button
+                    onclick=self.link.callback(|_| Msg::Delete)
+                    disabled=self.is_busy
+                >
+                    { "Delete" }
                 </button>
 
                 // TODO implement edit options for owner,

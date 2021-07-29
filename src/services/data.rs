@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use sfi_core::core::{Inventory, Item};
 use std::{
     collections::HashSet,
+    ops::DerefMut,
     rc::Rc,
     sync::{Arc, RwLock},
 };
@@ -21,8 +22,10 @@ const SIMPLE_STORE_KEY: &'static str = "sfi.simple_data.store";
 
 #[derive(Debug)]
 pub enum DataAgentRequest {
-    GetInventories,
     MakeDebugInventory,
+
+    GetInventories,
+    GetInventory(Uuid),
     CreateInventory(String),
     UpdateInventory {
         target: Arc<RwLock<Inventory>>,
@@ -32,6 +35,8 @@ pub enum DataAgentRequest {
         writables: Vec<Uuid>,
         readables: Vec<Uuid>,
     },
+    DeleteInventory(Arc<RwLock<Inventory>>),
+
     UpdateItem {
         target: Arc<RwLock<Item>>,
         name: String,
@@ -39,7 +44,6 @@ pub enum DataAgentRequest {
     },
     CreateItem(Uuid, String, Option<String>),
     DeleteAllData,
-    GetInventory(Uuid),
     GetItem(Uuid, Uuid),
 }
 
@@ -47,10 +51,10 @@ pub enum DataAgentRequest {
 pub enum DataAgentResponse {
     Inventories(Vec<Arc<RwLock<Inventory>>>),
     NewInventoryUuid(Uuid),
-
     Inventory(Arc<RwLock<Inventory>>),
     InvalidInventoryUuid,
     UpdatedInventory(Arc<RwLock<Inventory>>),
+    DeletedInventory(Uuid),
 
     NewItemUuid(Uuid),
     Item(Arc<RwLock<Item>>),
@@ -278,6 +282,25 @@ impl Agent for DataAgent {
                 };
 
                 self.link.respond(id, res);
+            }
+            DataAgentRequest::DeleteInventory(target) => {
+                let target_uuid = target
+                    .read()
+                    .expect("Cannot read inventory to be deleted")
+                    .uuid;
+
+                let index = self
+                    .inventories
+                    .iter()
+                    .position(|i| i.read().expect("Cannot read inventory").uuid == target_uuid)
+                    .expect("No such inventory");
+
+                self.inventories.remove(index);
+
+                self.persist_data();
+
+                let response = DataAgentResponse::DeletedInventory(target_uuid);
+                self.link.respond(id, response);
             }
         }
     }

@@ -68,6 +68,7 @@ impl Component for Items {
                 | DataAgentResponse::NewInventoryUuid(_)
                 | DataAgentResponse::Item(_)
                 | DataAgentResponse::UpdatedItem
+                | DataAgentResponse::DeletedInventory(_)
                 | DataAgentResponse::NewItemUuid(_)
                 | DataAgentResponse::UpdatedInventory(_) => false,
             },
