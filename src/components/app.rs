@@ -120,6 +120,14 @@ impl App {
                 html! { <UpdateItem inventory_uuid=inv_uuid item_uuid=it_uuid /> }
             }
 
+            AppRoute::CreateItem(inv_uuid) => {
+                html! { <CreateItem inventory_uuid=inv_uuid /> }
+            }
+
+            AppRoute::Items(inv_uuid) => {
+                html! { <Items inventory_uuid=inv_uuid /> }
+            }
+
             // The 404-like display
             AppRoute::PageNotFound(path) => {
                 html! {
@@ -161,12 +169,6 @@ impl App {
             }
             AppRoute::Units(inv_uuid, it_uuid) => {
                 html! { "still need to implement this"}
-            }
-            AppRoute::CreateItem(inv_uuid) => {
-                html! { <CreateItem inventory_uuid=inv_uuid /> }
-            }
-            AppRoute::Items(inv_uuid) => {
-                html! { <Items inventory_uuid=inv_uuid /> }
             }
         }
     }
