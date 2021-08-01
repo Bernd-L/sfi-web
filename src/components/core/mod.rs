@@ -4,6 +4,7 @@ pub mod inventories;
 pub mod inventory_card;
 pub mod item_card;
 pub mod items;
+pub mod unit_card;
 pub mod units;
 pub mod update_inventory;
 pub mod update_item;
