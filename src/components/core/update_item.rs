@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use sfi_core::core::{Inventory, Item};
 use uuid::Uuid;
-use yew::prelude::*;
+use yew::{prelude::*, services::DialogService};
 use yew_router::{agent::RouteRequest, prelude::RouteAgentDispatcher};
 
 use crate::{
@@ -28,6 +28,7 @@ pub enum Msg {
     DataAgentResponse(DataAgentResponse),
     Confirm,
     Cancel,
+    Delete,
 }
 
 #[derive(Clone, Properties)]
@@ -88,6 +89,20 @@ impl Component for UpdateItem {
                 self.is_busy = true;
                 true
             }
+            Msg::Delete => {
+                let should_kaboom = DialogService::confirm(&format!(
+                    "Delete item \"{}\"?\nThis operation cannot be undone.",
+                    self.old_name
+                ));
+
+                if should_kaboom {
+                    self.data_bridge.send(DataAgentRequest::DeleteItem(
+                        self.item.clone().expect("Must be Some"),
+                    ))
+                }
+
+                should_kaboom
+            }
             Msg::DataAgentResponse(res) => match res {
                 DataAgentResponse::Item(item) => {
                     {
@@ -109,6 +124,22 @@ impl Component for UpdateItem {
                     ));
 
                     self.is_busy = false;
+                    true
+                }
+                DataAgentResponse::DeletedItem(_) => {
+                    self.route_dispatcher.send(RouteRequest::ChangeRoute(
+                        AppRoute::Items(
+                            self.item
+                                .clone()
+                                .expect("Must be Some")
+                                .read()
+                                .expect("Cannot read item")
+                                .inventory_uuid,
+                        )
+                        .into(),
+                    ));
+
+                    self.is_busy = true;
                     true
                 }
 
@@ -172,6 +203,14 @@ impl Component for UpdateItem {
                     disabled=self.is_busy
                 >
                     { "Cancel" }
+                </button>  { " " }
+
+                // Delete button
+                <button
+                    onclick=self.link.callback(|_| Msg::Delete)
+                    disabled=self.is_busy
+                >
+                    { "Delete" }
                 </button>
 
                 // TODO implement edit options for owner,

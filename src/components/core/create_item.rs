@@ -108,6 +108,7 @@ impl Component for CreateItem {
                 | DataAgentResponse::UpdatedItem
                 | DataAgentResponse::Item(_)
                 | DataAgentResponse::DeletedInventory(_)
+                | DataAgentResponse::DeletedItem(_)
                 | DataAgentResponse::UpdatedInventory(_) => false,
             },
         }

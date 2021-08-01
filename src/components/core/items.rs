@@ -70,6 +70,7 @@ impl Component for Items {
                 | DataAgentResponse::UpdatedItem
                 | DataAgentResponse::DeletedInventory(_)
                 | DataAgentResponse::NewItemUuid(_)
+                | DataAgentResponse::DeletedItem(_)
                 | DataAgentResponse::UpdatedInventory(_) => false,
             },
         }

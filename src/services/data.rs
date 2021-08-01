@@ -45,6 +45,7 @@ pub enum DataAgentRequest {
     CreateItem(Uuid, String, Option<String>),
     DeleteAllData,
     GetItem(Uuid, Uuid),
+    DeleteItem(Arc<RwLock<Item>>),
 }
 
 #[derive(Debug)]
@@ -59,6 +60,7 @@ pub enum DataAgentResponse {
     NewItemUuid(Uuid),
     Item(Arc<RwLock<Item>>),
     UpdatedItem,
+    DeletedItem(Uuid),
 }
 
 pub enum Msg {
@@ -300,6 +302,34 @@ impl Agent for DataAgent {
                 self.persist_data();
 
                 let response = DataAgentResponse::DeletedInventory(target_uuid);
+                self.link.respond(id, response);
+            }
+            DataAgentRequest::DeleteItem(target) => {
+                let target = target.read().expect("Cannot read item to be deleted");
+
+                let mut inventory = self
+                    .inventories
+                    .iter()
+                    .find(|i| {
+                        i.read().expect("Cannot read inventory").uuid == target.inventory_uuid
+                    })
+                    .expect("Cannot get inventory as mutable")
+                    .write()
+                    .expect("Cannot write to inventory");
+
+                let item_index = inventory
+                    .items
+                    .iter()
+                    .position(|i| i.read().expect("Cannot read inventory").uuid == target.uuid)
+                    .expect("No such item");
+
+                inventory.items.remove(item_index);
+
+                drop(inventory);
+
+                self.persist_data();
+
+                let response = DataAgentResponse::DeletedItem(target.uuid);
                 self.link.respond(id, response);
             }
         }
